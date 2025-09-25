@@ -16,17 +16,17 @@ use cosmic_randr_shell::{
     AdaptiveSyncAvailability, AdaptiveSyncState, List, Output, OutputKey, Transform,
 };
 use cosmic_settings_page::{self as page, Section, section};
-use once_cell::sync::Lazy;
 use slab::Slab;
 use slotmap::{Key, SecondaryMap, SlotMap};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::{collections::BTreeMap, process::ExitStatus, sync::Arc};
+use std::sync::{Arc, LazyLock};
+use std::{collections::BTreeMap, process::ExitStatus};
 use tokio::sync::oneshot;
 
 static DPI_SCALES: &[u32] = &[50, 75, 100, 125, 150, 175, 200, 225, 250, 275, 300];
 
-static DPI_SCALE_LABELS: Lazy<Vec<String>> =
-    Lazy::new(|| DPI_SCALES.iter().map(|scale| format!("{scale}%")).collect());
+static DPI_SCALE_LABELS: LazyLock<Vec<String>> =
+    LazyLock::new(|| DPI_SCALES.iter().map(|scale| format!("{scale}%")).collect());
 
 /// Display color depth options
 #[allow(dead_code)]
@@ -74,7 +74,7 @@ pub enum Message {
     DialogCancel,
     /// The dialog was completed.
     DialogComplete,
-    /// How long until the dialog automatically cancelles, in seconds.
+    /// How long until the dialog automatically cancels, in seconds.
     DialogCountdown,
     /// Toggles display on or off.
     DisplayToggle(bool),
@@ -475,6 +475,34 @@ impl Page {
             Message::RandrResult(result) => {
                 if let Some(Err(why)) = Arc::into_inner(result) {
                     tracing::error!(why = why.to_string(), "cosmic-randr error");
+                    // Cancel the revert dialog if resolution or refresh rate did not change.
+                    // RandR may revert those changes in certain circumstances so showing the
+                    // dialog is superfluous and confusing.
+                    if let Some(mode) =
+                        self.list
+                            .outputs
+                            .get(self.active_display)
+                            .and_then(|display| {
+                                display.current.and_then(|key| self.list.modes.get(key))
+                            })
+                    {
+                        tracing::debug!(old = ?self.dialog, new = ?mode, "Mode update");
+                        match self.dialog {
+                            Some(Randr::Resolution(width, height)) => {
+                                if mode.size.0 == width && mode.size.1 == height {
+                                    self.config.resolution = Some((width, height));
+                                    return self.update(Message::DialogComplete);
+                                }
+                            }
+                            Some(Randr::RefreshRate(rate)) => {
+                                if mode.refresh_rate == rate {
+                                    self.config.refresh_rate = Some(rate);
+                                    return self.update(Message::DialogComplete);
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
                 }
             }
 
@@ -1071,7 +1099,7 @@ impl Page {
 
                 task.arg("mode")
                     .arg("--adaptive-sync")
-                    .arg(format!("{}", mode))
+                    .arg(<&'static str>::from(mode))
                     .arg(name)
                     .arg(itoa::Buffer::new().format(current.size.0))
                     .arg(itoa::Buffer::new().format(current.size.1));
@@ -1248,7 +1276,7 @@ pub fn display_configuration() -> Section<crate::pages::Message> {
                     widget::settings::item(
                         &descriptions[scale],
                         dropdown::popup_dropdown(
-                            &DPI_SCALE_LABELS,
+                            DPI_SCALE_LABELS.as_slice(),
                             page.cache.scale_selected,
                             Message::Scale,
                             cosmic::iced::window::Id::RESERVED,

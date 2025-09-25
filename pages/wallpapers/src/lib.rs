@@ -1,19 +1,22 @@
 pub use cosmic_bg_config::{Color, Config, Entry, Gradient, ScalingMode, Source};
-use eyre::{eyre, OptionExt};
+use eyre::eyre;
 use fast_image_resize::SrcCropping;
 use futures_lite::Stream;
+use futures_util::StreamExt;
 use image::imageops::FilterType;
 use image::{DynamicImage, ImageBuffer, Rgba, RgbaImage};
-use jxl_oxide::{EnumColourEncoding, JxlImage, PixelFormat};
+use jxl_oxide::integration::JxlDecoder;
+use std::fs::File;
 use std::os::unix::ffi::OsStrExt;
 use std::{
     borrow::Cow,
-    collections::{hash_map::DefaultHasher, BTreeSet, HashMap},
+    collections::{HashMap, hash_map::DefaultHasher},
     hash::{Hash, Hasher},
     io::Read,
     path::{Path, PathBuf},
     pin::Pin,
 };
+use walkdir::WalkDir;
 
 pub const DEFAULT_COLORS: &[Color] = &[
     Color::Single([0.580, 0.922, 0.922]),
@@ -99,54 +102,41 @@ pub fn cache_dir() -> Option<PathBuf> {
 pub async fn load_each_from_path(
     path: PathBuf,
 ) -> Pin<Box<dyn Send + Stream<Item = (PathBuf, RgbaImage, RgbaImage)>>> {
-    let wallpapers = tokio::task::spawn_blocking(move || {
-        // Discovered image files that will be loaded as wallpapers.
-        let mut wallpapers = BTreeSet::new();
+    let candidate_paths: Vec<_> = WalkDir::new(path)
+        .max_depth(3)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|entry| entry.file_type().is_file())
+        .map(|entry| entry.path().to_path_buf())
+        .collect();
 
-        if let Ok(dir) = path.read_dir() {
-            for entry in dir.filter_map(Result::ok) {
-                let Ok(file_type) = entry.file_type() else {
-                    continue;
+    let future = futures_util::stream::iter(candidate_paths)
+        .map(|path| {
+            tokio::task::spawn_blocking(move || {
+                let is_jxl = path.extension().map(|ext| ext == "jxl").unwrap_or_default();
+                let is_image = if !is_jxl {
+                    if let Ok(Some(kind)) = infer::get_from_path(&path) {
+                        infer::MatcherType::Image == kind.matcher_type()
+                    } else {
+                        false
+                    }
+                } else {
+                    eprintln!("is jxl");
+                    true
                 };
 
-                let path = entry.path();
-
-                if file_type.is_file() {
-                    let path = if path.extension().map(|ext| ext == "jxl").unwrap_or_default() {
-                        path
-                    } else if let Ok(Some(kind)) = infer::get_from_path(&path) {
-                        if infer::MatcherType::Image == kind.matcher_type() {
-                            path
-                        } else {
-                            continue;
-                        }
-                    } else {
-                        continue;
-                    };
-
-                    wallpapers.insert(path);
-
-                    if wallpapers.len() > 99 {
-                        break;
-                    }
+                if is_jxl || is_image {
+                    load_image_with_thumbnail(path)
+                } else {
+                    None
                 }
-            }
-        }
+            })
+        })
+        .buffered(4)
+        .filter_map(|value| async { value.ok().flatten() })
+        .take(100);
 
-        wallpapers
-    });
-
-    if let Ok(wallpapers) = wallpapers.await {
-        use futures_util::StreamExt;
-        let future = futures_util::stream::iter(wallpapers)
-            .map(|path| tokio::task::spawn_blocking(|| load_image_with_thumbnail(path)))
-            .buffered(4)
-            .filter_map(|value| async { value.ok()? });
-
-        Box::pin(future)
-    } else {
-        Box::pin(futures_lite::stream::empty())
-    }
+    Box::pin(future)
 }
 
 #[must_use]
@@ -442,70 +432,13 @@ fn border_radius(
 
 /// Decodes JPEG XL image files into `image::DynamicImage` via `jxl-oxide`.
 pub fn decode_jpegxl(path: &std::path::Path) -> eyre::Result<DynamicImage> {
-    let mut image = JxlImage::builder()
-        .open(path)
-        .map_err(|why| eyre!("failed to read image header: {why}"))?;
-    image.request_color_encoding(EnumColourEncoding::srgb(
-        jxl_oxide::RenderingIntent::Relative,
-    ));
-    let render = image
-        .render_frame(0)
-        .map_err(|why| eyre!("failed to render image frame: {why}"))?;
+    let file = File::open(path).map_err(|why| eyre!("failed to open jxl image file: {why}"))?;
 
-    let framebuffer = render.image_all_channels();
-    match image.pixel_format() {
-        PixelFormat::Graya => image::GrayAlphaImage::from_raw(
-            framebuffer.width() as u32,
-            framebuffer.height() as u32,
-            framebuffer
-                .buf()
-                .iter()
-                .map(|x| x * 255. + 0.5)
-                .map(|x| x as u8)
-                .collect::<Vec<_>>(),
-        )
-        .map(DynamicImage::ImageLumaA8)
-        .ok_or_eyre("Can't decode gray alpha buffer"),
-        PixelFormat::Gray => image::GrayImage::from_raw(
-            framebuffer.width() as u32,
-            framebuffer.height() as u32,
-            framebuffer
-                .buf()
-                .iter()
-                .map(|x| x * 255. + 0.5)
-                .map(|x| x as u8)
-                .collect::<Vec<_>>(),
-        )
-        .map(DynamicImage::ImageLuma8)
-        .ok_or_eyre("Can't decode gray buffer"),
-        PixelFormat::Rgba => image::RgbaImage::from_raw(
-            framebuffer.width() as u32,
-            framebuffer.height() as u32,
-            framebuffer
-                .buf()
-                .iter()
-                .map(|x| x * 255. + 0.5)
-                .map(|x| x as u8)
-                .collect::<Vec<_>>(),
-        )
-        .map(DynamicImage::ImageRgba8)
-        .ok_or_eyre("Can't decode rgba buffer"),
-        PixelFormat::Rgb => image::RgbImage::from_raw(
-            framebuffer.width() as u32,
-            framebuffer.height() as u32,
-            framebuffer
-                .buf()
-                .iter()
-                .map(|x| x * 255. + 0.5)
-                .map(|x| x as u8)
-                .collect::<Vec<_>>(),
-        )
-        .map(DynamicImage::ImageRgb8)
-        .ok_or_eyre("Can't decode rgb buffer"),
-        //TODO: handle this
-        PixelFormat::Cmyk => Err(eyre!("unsupported pixel format: CMYK")),
-        PixelFormat::Cmyka => Err(eyre!("unsupported pixel format: CMYKA")),
-    }
+    let decoder =
+        JxlDecoder::new(file).map_err(|why| eyre!("failed to read jxl image header: {why}"))?;
+
+    image::DynamicImage::from_decoder(decoder)
+        .map_err(|why| eyre!("failed to decode jxl image: {why}"))
 }
 
 /// Use `fast-image-resize` crate for faster thumbnail generation.

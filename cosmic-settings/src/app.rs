@@ -42,10 +42,6 @@ use cosmic::{
 #[cfg(feature = "wayland")]
 use cosmic_panel_config::CosmicPanelConfig;
 use cosmic_settings_page::{self as page, section};
-#[cfg(feature = "page-accessibility")]
-use cosmic_settings_subscriptions::accessibility::{
-    DBusRequest, DBusUpdate, subscription as a11y_subscription,
-};
 #[cfg(feature = "wayland")]
 use desktop::{
     dock,
@@ -99,6 +95,7 @@ impl SettingsApp {
             PageCommands::Displays => self.pages.page_id::<display::Page>(),
             #[cfg(feature = "wayland")]
             PageCommands::Dock => self.pages.page_id::<desktop::dock::Page>(),
+            PageCommands::DockApplet => self.pages.page_id::<desktop::dock::applets::Page>(),
             PageCommands::Firmware => self.pages.page_id::<system::firmware::Page>(),
             #[cfg(feature = "page-input")]
             PageCommands::Input => self.pages.page_id::<input::Page>(),
@@ -114,12 +111,16 @@ impl SettingsApp {
             PageCommands::Network => self.pages.page_id::<networking::Page>(),
             #[cfg(feature = "wayland")]
             PageCommands::Panel => self.pages.page_id::<desktop::panel::Page>(),
+            PageCommands::PanelApplet => {
+                self.pages.page_id::<desktop::panel::applets_inner::Page>()
+            }
             #[cfg(feature = "page-power")]
             PageCommands::Power => self.pages.page_id::<power::Page>(),
             #[cfg(feature = "page-region")]
             PageCommands::RegionLanguage => self.pages.page_id::<time::region::Page>(),
             #[cfg(feature = "page-sound")]
             PageCommands::Sound => self.pages.page_id::<sound::Page>(),
+            PageCommands::StartupApps => self.pages.page_id::<applications::startup_apps::Page>(),
             PageCommands::System => self.pages.page_id::<system::Page>(),
             PageCommands::Time => self.pages.page_id::<time::Page>(),
             #[cfg(feature = "page-input")]
@@ -234,7 +235,10 @@ impl cosmic::Application for SettingsApp {
         }
         .unwrap_or(desktop_id);
 
-        let task = app.activate_page(active_id);
+        let task = Task::batch([
+            cosmic::command::set_theme(cosmic::theme::system_preference()),
+            app.activate_page(active_id),
+        ]);
         (app, task)
     }
 
@@ -292,7 +296,9 @@ impl cosmic::Application for SettingsApp {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        Subscription::batch(vec![
+        let page = &self.pages.page[self.active_page];
+
+        let subscriptions = vec![
             #[cfg(feature = "ashpd")]
             crate::subscription::daytime().map(|daytime| {
                 Message::PageMessage(pages::Message::Appearance(appearance::Message::Daytime(
@@ -315,6 +321,7 @@ impl cosmic::Application for SettingsApp {
             // Watch for changes to installed desktop entries
             desktop_files(0).map(|_| Message::DesktopInfo),
             // Watch for configuration changes to the panel.
+            // TODO: This should only be active when the panel page is active.
             #[cfg(feature = "wayland")]
             self.core()
                 .watch_config::<CosmicPanelConfig>("com.system76.CosmicPanel.Panel")
@@ -325,6 +332,7 @@ impl cosmic::Application for SettingsApp {
 
                     Message::PanelConfig(update.config)
                 }),
+            // TODO: This should only be active when the dock page is active.
             #[cfg(feature = "wayland")]
             self.core()
                 .watch_config::<CosmicPanelConfig>("com.system76.CosmicPanel.Dock")
@@ -335,21 +343,10 @@ impl cosmic::Application for SettingsApp {
 
                     Message::PanelConfig(update.config)
                 }),
-            // Watch for state changes from the cosmic-bg session service.
-            self.core()
-                .watch_state::<cosmic_bg_config::state::State>(cosmic_bg_config::NAME)
-                .map(|update| {
-                    Message::PageMessage(pages::Message::DesktopWallpaper(
-                        pages::desktop::wallpaper::Message::UpdateState(update.config),
-                    ))
-                }),
-            #[cfg(feature = "page-accessibility")]
-            a11y_subscription().map(|m| {
-                Message::PageMessage(pages::Message::Accessibility(
-                    pages::accessibility::Message::DBusUpdate(m),
-                ))
-            }),
-        ])
+            page.subscription(self.core()).map(Message::PageMessage),
+        ];
+
+        Subscription::batch(subscriptions)
     }
 
     #[allow(clippy::too_many_lines)]
@@ -371,6 +368,7 @@ impl cosmic::Application for SettingsApp {
             }
 
             Message::SearchClear => {
+                self.search_active = false;
                 self.search_clear();
             }
 
@@ -552,6 +550,12 @@ impl cosmic::Application for SettingsApp {
                     }
                 }
 
+                crate::pages::Message::StartupApps(message) => {
+                    if let Some(page) = self.pages.page_mut::<applications::startup_apps::Page>() {
+                        return page.update(message).map(Into::into);
+                    }
+                }
+
                 #[cfg(feature = "page-users")]
                 crate::pages::Message::User(message) => {
                     if let Some(page) = self.pages.page_mut::<system::users::Page>() {
@@ -639,12 +643,6 @@ impl cosmic::Application for SettingsApp {
                 #[cfg(feature = "page-networking")]
                 crate::pages::Message::Wired(message) => {
                     if let Some(page) = self.pages.page_mut::<networking::wired::Page>() {
-                        return page.update(message).map(Into::into);
-                    }
-                }
-
-                crate::pages::Message::StartupApps(message) => {
-                    if let Some(page) = self.pages.page_mut::<applications::startup_apps::Page>() {
                         return page.update(message).map(Into::into);
                     }
                 }
@@ -764,8 +762,9 @@ impl cosmic::Application for SettingsApp {
                 }
             }
 
-            Message::SetTheme(t) => return cosmic::command::set_theme(t),
-
+            Message::SetTheme(t) => {
+                return cosmic::command::set_theme(t);
+            }
             Message::OpenContextDrawer(page) => {
                 self.core.window.show_context = true;
                 self.active_context_page = Some(page);
@@ -856,12 +855,6 @@ impl cosmic::Application for SettingsApp {
                     new_theme.clone(),
                 )))
                 .map(Into::into),
-            );
-        }
-        if let Some(page) = self.pages.page_mut::<appearance::Page>() {
-            tasks.push(
-                page.update(appearance::Message::NewTheme(Box::new(new_theme.clone())))
-                    .map(Into::into),
             );
         }
 

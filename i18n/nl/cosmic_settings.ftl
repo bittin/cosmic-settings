@@ -1,7 +1,7 @@
 app = COSMIC-instellingen
 
 dbus-connection-error = Kon geen verbinding maken met DBus
-ok = Oké
+ok = OK
 unknown = Onbekend
 
 number = { $number }
@@ -9,28 +9,28 @@ number = { $number }
 ## Network & Wireless
 
 connections-and-profiles = { $variant ->
-    [wired] Bekabelde verbindingen
-    [wifi] Wifi
-    [vpn] VPN
+    [wired] Kabelverbindingen
+    [wifi] Wifi-verbindingen
+    [vpn] VPN-verbindingen
     *[other] Onbekende verbindingen
 } en verbindingsprofielen.
 
 add-network = Netwerk toevoegen
     .profile = Profiel toevoegen
 add-vpn = VPN toevoegen
-airplane-on = Vliegtuigmodus is ingeschakeld.
+airplane-on = Vliegtuigmodus staat aan.
 cable-unplugged = Kabel losgekoppeld
 connect = Verbinden
 connected = Verbonden
-connecting = Verbinding maken...
+connecting = Verbinding maken…
 disconnect = Verbinden verbreken
 forget = Vergeten
 known-networks = Bekende netwerken
 network-and-wireless = Netwerk en wifi
-no-networks = Er zijn geen netwerken gevonden.
+no-networks = Geen netwerken gevonden.
 no-vpn = Geen VPN-verbindingen beschikbaar.
 password = Wachtwoord
-password-confirm = Bevestig het wachtwoord
+password-confirm = Wachtwoord bevestigen
 remove = Verwijderen
 settings = Instellingen
 username = Gebruikersnaam
@@ -39,39 +39,39 @@ identity = Identiteit
 
 auth-dialog = Authenticatie vereist
     .vpn-description = Voer de gebruikersnaam en het wachtwoord van de VPN-dienst in.
-    .wifi-description = Voer het wachtwoord of de encryptiesleutel in. U kunt ook verbinden door op de "WPS"-knop op de router te drukken.
+    .wifi-description = Voer het wachtwoord of de encryptiesleutel in. U kunt ook verbinden door op de “WPS”-knop op de router te drukken.
 
-forget-dialog = Wifinetwerk vergeten?
-    .description = U moet opnieuw een wachtwoord invoeren om dit wifinetwerk in de toekomst te gebruiken.
-
+forget-dialog = Dit wifi-netwerk vergeten?
+    .description = U zal opnieuw een wachtwoord moeten invoeren als u dit wifi-netwerk in de toekomst gaat gebruiken.
+    
 network-device-state =
     .activated = Verbonden
-    .config = Verbinding maken...
-    .deactivating = Verbinding verbreken...
-    .disconnected = Verbinding is verbroken
+    .config = Verbinding maken…
+    .deactivating = Verbinding verbreken…
+    .disconnected = Verbinding verbroken
     .failed = Verbinding mislukt
-    .ip-check = Verbinding wordt gecontroleerd...
-    .ip-config =  IP- en routeringsinformatie wordt opgevraagd...
+    .ip-check = Verbinding controleren…
+    .ip-config =  IP- en routeringsinformatie opvragen…
     .need-auth = Vereist authenticatie
-    .prepare = Verbinding voorbereiden...
-    .secondaries = Wachten op secundaire verbinding...
+    .prepare = Verbinding voorbereiden…
+    .secondaries = Wachten op secundaire verbinding…
     .unavailable = Niet beschikbaar
     .unknown = Status onbekend
     .unmanaged = Onbeheerd
     .unplugged = Kabel losgekoppeld
 
 remove-connection-dialog = Verbindingsprofiel verwijderen?
-    .vpn-description =  Om dit netwerk in de toekomst te kunnen gebruiken, moet u opnieuw een wachtwoord invoeren.
-    .wired-description = U moet dit profiel opnieuw aanmaken om het in de toekomst te kunnen gebruiken.
+    .vpn-description =  U zal opnieuw een wachtwoord moeten invoeren als u dit netwerk in de toekomst gaat gebruiken.
+    .wired-description = U zal dit profiel opnieuw moeten aanmaken om het in de toekomst te kunnen gebruiken.
 
 vpn = VPN
     .connections = VPN-verbindingen
-    .error = Kon geen VPN-configuratie aanmaken
+    .error = Kon VPN-configuratie niet toevoegen
     .remove = Verbindingsprofiel verwijderen
-    .select-file = Selecteer VPN-configuratiebestand
+    .select-file = Selecteer een VPN-configuratiebestand
 
 vpn-error = VPN-fout
-    .config = Kon geen VPN-configuratie aanmaken
+    .config = Kon VPN-configuratie niet toevoegen
     .connect = VPN-verbinding mislukt
     .connection-editor =  Verbindingseditor mislukt
     .connection-settings = Het ophalen van instellingen voor actieve verbindingen is mislukt
@@ -113,15 +113,15 @@ bluetooth = Bluetooth
     .desc = Bluetooth-apparaten bewerken
     .status = Dit systeem is zichtbaar als { $aliases } zolang de bluetooth-instellingen open staan.
     .connected = Verbonden
-    .connecting = Verbinding maken...
-    .disconnecting = Verbinding verbreken...
+    .connecting = Verbinding maken
+    .disconnecting = Verbinding verbreken
     .connect = Verbinden
     .disconnect = Verbinding verbreken
     .forget = Vergeten
     .dbus-error = Er is een fout opgetreden tijdens de interactie met DBus: { $why }
     .disabled = De bluetooth-service is uitgeschakeld
     .inactive = De bluetooth-service is niet actief
-    .unknown = Cosmic kon de bluetooth-service niet activeren. Heeft u bluez geïnstalleerd?
+    .unknown = De bluetooth-service kon niet worden geactiveerd. Is BlueZ geïnstalleerd?
 
 bluetooth-paired = Eerder verbonden apparaten
     .connect = Verbinden
@@ -141,6 +141,7 @@ accessibility = Toegankelijkheid
     .on = Aan
     .off = Uit
     .unavailable = Niet beschikbaar
+    .screen-reader = Schermverteller
     .high-contrast = Verhoogde contrast modus
     .invert-colors = Kleuren omkeren
     .color-filters = Kleurfilters
@@ -165,10 +166,10 @@ magnifier = Vergrootglas
     .increment = Zoom-stapgrootte
     .signin = Het vergrootglas direct gebruiken als u inlogt
     .applet = Met een panel-applet het vergrootglas in-/uitschakelen
-    .movement = Beweegt de vergroting
+    .movement = De vergroting beweegt mee
     .continuous = De vergroting volgt de muis
-    .onedge = Verplaats als de muis de randen raakt
-    .centered = Houd de muis steeds in het midden van de vergroting
+    .onedge = Verplaatst als de muis de randen raakt
+    .centered = Houdt de muis steeds in het midden van de vergroting
 color-filter = Type kleurfilter
     .unknown = Onbekend kleurfilter actief
     .greyscale = Grijstinten
@@ -202,11 +203,14 @@ fit-to-screen = Aan het scherm passend maken
 open-new-folder = Nieuwe map openen
 recent-folders = Recente mappen
 
-x-minutes = { $number ->
-        [1] 1 minuut
-        *[other] { $number } minuten
+x-minutes = { $number } { $number ->
+        [one] minuut
+        *[other] minuten
     }
 x-hours = { $number } uur
+# these three lines are intentionally left empty
+
+
 never = Nooit
 
 ## Desktop: Appearance
@@ -282,8 +286,8 @@ monospace-font = Lettertype met gelijke letterbreedte
 
 ## Desktop: Notifications
 
-notifications = Meldingen
-    .desc = Niet storen, meldingen op het vergrendelingsscherm en instellingen per applicatie.
+notifications = Meldingsinstellingen
+    .desc = 'Niet storen', meldingen op het vergrendelingsscherm en meldingsinstellingen per app.
 
 ## Desktop: Panel
 
@@ -343,7 +347,7 @@ dock = Dock
 ## Desktop: Window management
 
 window-management = Vensterbeheer
-    .desc = Actie van de supertoets, vensterbeheeropties en aanvullende opties voor het tegelen van vensters.
+    .desc = Opties voor de Supertoets, vensterbeheer en aanvullende opties voor het tegelen van vensters.
 
 super-key = Actie van de supertoets
     .launcher = Snelstarter openen
@@ -361,7 +365,7 @@ window-controls = Vensterbeheer
 focus-navigation = Focusbesturing
     .focus-follows-cursor = Focus volgt de cursor
     .focus-follows-cursor-delay = Vertraging voor focus volgt de cursor in ms
-    .cursor-follows-focus = De cursor volgt de focus
+    .cursor-follows-focus = De cursor volgt focus
 
 ## Desktop: Workspaces
 
@@ -412,10 +416,8 @@ display = Beeldschermen
     .scale = Schaal
     .additional-scale-options = Extra schalingsopties
 
-mirroring = Mirroring
-
 mirroring = Scherm dupliceren
-    .id = Dupliceren { $id }
+    .id = { $id } dupliceren
     .dont = Niet dupliceren
     .mirror = { $display } dupliceren
     .project = Naar { $display ->
@@ -486,22 +488,21 @@ power = Enegrie en batterij
     .desc = Energieverbruik beheren
 
 battery = Batterij
-  .minute = { $value } { $value ->
+    .minute = { $value } { $value ->
         [one] minuut
-       *[other] minuten
-  }
-  .hour = { $value } uur
-  }
-  .day = { $value } { $value ->
+        *[other] minuten
+    }
+    .hour = { $value } uur
+    .day = { $value } { $value ->
         [one] dag
-       *[other] dagen
-  }
-  .less-than-minute = In minder dan één minuut
-  .and = en
-  .remaining-time = { $time } { $action ->
+        *[other] dagen
+    }
+    .less-than-minute = In minder dan één minuut
+    .and = en
+    .remaining-time = De batterij is over { $time } { $action ->
         [full] opgeladen
-       *[other] leeg
-   }
+        *[other] leeg
+    }
 
 connected-devices = Verbonden apparaten
   .unknown = Onbekend apparaat
@@ -640,6 +641,7 @@ nav-shortcuts = Navigatie
 manage-windows = Vensterbeheer
     .close = Venster sluiten
     .maximize = Venster maximaliseren
+    .fullscreen = Volledig scherm
     .minimize = Venster minimaliseren
     .resize-inwards = Venster verkleinen
     .resize-outwards = Venster vergroten
@@ -688,6 +690,7 @@ system-shortcut = Systeem
     .play-pause = Afspelen/Pauzeren
     .play-next = Volgend nummer
     .play-prev = Vorig nummer
+    .poweroff = Computer afsluiten
     .screenshot = Schermafbeelding maken
     .terminal = Open een terminal
     .volume-lower = Uitvoervolume lager
@@ -778,7 +781,7 @@ time-format = Datum- en tijdweergave
     .monday = Maandag
 
 time-region = Taal en regio
-    .desc = Regionale datum- en tijd- en getalweergave.
+    .desc = Regionale datum-, tijd- en getalweergave.
 
 formatting = Opmaak
     .dates = Datum
@@ -812,8 +815,8 @@ default-apps = Standaardtoepassingen
     .photos = Foto's
     .calendar = Agenda
     .terminal = Terminal
-    .other-associations = Andere koppelingen
-    .text-editor = Teksteditor
+    .other-associations = Andere standaardtoepassingen
+    .text-editor = Tekstbewerking
 
 ## Applications: Startup Applications
 
@@ -847,7 +850,7 @@ legacy-app-scaling = Het schalen van vensters die het X11-venstersysteem gebruik
     .scaled-compatibility = Modus voor maximale compatibiliteit
     .compatibility-description = X11-vensters kunnen wazig lijken op HiDPI-schermen.
     .preferred-display = Uw voorkeursscherm voor games en X11-vensters in volledig scherm
-    .no-display = <Geen>
+    .no-display = Geen
 
 ## System
 

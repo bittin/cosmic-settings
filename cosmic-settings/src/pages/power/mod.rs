@@ -4,20 +4,21 @@ use self::backend::{GetCurrentPowerProfile, SetPowerProfile};
 use backend::{Battery, ConnectedDevice, PowerProfile};
 
 use chrono::TimeDelta;
-use cosmic::Task;
-use cosmic::iced::{Alignment, Length};
+use cosmic::iced::{self, Alignment, Length};
 use cosmic::iced_widget::{column, row};
 use cosmic::widget::{self, radio, settings, text};
 use cosmic::{Apply, surface};
+use cosmic::{Task, iced_futures};
 use cosmic_config::{Config, CosmicConfigEntry};
 use cosmic_idle_config::CosmicIdleConfig;
 use cosmic_settings_page::{self as page, Section, section};
-use futures::StreamExt;
+use futures::{SinkExt, StreamExt};
 use itertools::Itertools;
 use slab::Slab;
 use slotmap::SlotMap;
 use std::iter;
 use std::time::Duration;
+use upower_dbus::DeviceProxy;
 
 static SCREEN_OFF_TIMES: &[Duration] = &[
     Duration::from_secs(2 * 60),
@@ -58,6 +59,8 @@ pub struct Page {
     suspend_labels: Vec<String>,
     idle_config: Config,
     idle_conf: CosmicIdleConfig,
+    backend: Option<backend::PowerBackendEnum>,
+    current_power_profile: Option<PowerProfile>,
 }
 
 impl Default for Page {
@@ -84,6 +87,8 @@ impl Default for Page {
                 .collect(),
             idle_config,
             idle_conf,
+            backend: None,
+            current_power_profile: None,
         }
     }
 }
@@ -111,6 +116,66 @@ impl page::Page<crate::pages::Message> for Page {
         ])
     }
 
+    fn subscription(
+        &self,
+        _core: &cosmic::Core,
+    ) -> cosmic::iced::Subscription<crate::pages::Message> {
+        // Shared logic between the system battery and connected device batteries.
+        async fn receive_battery_changes(
+            proxy: DeviceProxy<'static>,
+            device_path: String,
+            mut sender: futures::channel::mpsc::Sender<crate::pages::Message>,
+            message_fn: fn(String, Battery) -> Message,
+        ) {
+            let mut battery_level = proxy.receive_battery_level_changed().await;
+            let mut battery_state = proxy.receive_state_changed().await;
+
+            loop {
+                let _ = futures::future::select(battery_level.next(), battery_state.next()).await;
+
+                _ = sender
+                    .send(
+                        message_fn(device_path.clone(), Battery::from_device(&proxy).await).into(),
+                    )
+                    .await;
+            }
+        }
+
+        // A subscription for the system battery.
+        let system_battery = iced::Subscription::run(|| {
+            iced_futures::stream::channel(1, |sender| async move {
+                if let Ok(proxy) = backend::get_device_proxy().await {
+                    receive_battery_changes(proxy, String::new(), sender, |_, b| {
+                        Message::UpdateBattery(b)
+                    })
+                    .await;
+                }
+            })
+        });
+
+        // Subscriptions for all connected device batteries.
+        let device_batteries = self
+            .connected_devices
+            .iter()
+            .filter_map(|device| {
+                device
+                    .proxy
+                    .clone()
+                    .map(|p| (device.device_path.clone(), p))
+            })
+            .map(|(path, proxy)| {
+                iced::Subscription::run_with_id(
+                    path.clone(),
+                    iced_futures::stream::channel(1, |sender| async move {
+                        receive_battery_changes(proxy, path, sender, Message::UpdateDeviceBattery)
+                            .await
+                    }),
+                )
+            });
+
+        iced::Subscription::batch(std::iter::once(system_battery).chain(device_batteries))
+    }
+
     fn on_enter(&mut self) -> cosmic::Task<crate::pages::Message> {
         let futures: Vec<Task<Message>> = vec![
             cosmic::Task::future(async move {
@@ -121,8 +186,21 @@ impl page::Page<crate::pages::Message> for Page {
                 let devices = ConnectedDevice::update_connected_devices().await;
                 Message::UpdateConnectedDevices(devices)
             }),
+            cosmic::Task::future(async move {
+                if let Ok(backend) = tokio::time::timeout(
+                    std::time::Duration::from_millis(1000),
+                    backend::get_backend(),
+                )
+                .await
+                {
+                    Message::BackendAvailabilityCheck(backend)
+                } else {
+                    tracing::warn!("Power backend initialization timed out after 1000ms");
+                    Message::BackendAvailabilityCheck(None)
+                }
+            }),
             cosmic::Task::run(
-                async_fn_stream::fn_stream(|emitter| async move {
+                iced_futures::stream::channel(1, |mut emitter| async move {
                     let span = tracing::span!(tracing::Level::INFO, "power::device_stream task");
                     let _span_handle = span.enter();
 
@@ -134,13 +212,14 @@ impl page::Page<crate::pages::Message> for Page {
                     let added_stream = ConnectedDevice::device_added_stream(&connection).await;
                     let removed_stream = ConnectedDevice::device_removed_stream(&connection).await;
 
+                    let mut sender = emitter.clone();
                     let added_future = std::pin::pin!(async {
                         match added_stream {
                             Ok(stream) => {
                                 let mut stream = std::pin::pin!(stream);
                                 while let Some(device) = stream.next().await {
-                                    tracing::info!(device = device.model, "device added");
-                                    emitter.emit(Message::DeviceConnect(device)).await;
+                                    tracing::debug!(device = device.model, "device added");
+                                    _ = sender.send(Message::DeviceConnect(device)).await;
                                 }
                             }
                             Err(err) => tracing::error!(?err, "cannot establish added stream"),
@@ -152,8 +231,8 @@ impl page::Page<crate::pages::Message> for Page {
                             Ok(stream) => {
                                 let mut stream = std::pin::pin!(stream);
                                 while let Some(device_path) = stream.next().await {
-                                    tracing::info!(device_path, "device removed");
-                                    emitter.emit(Message::DeviceDisconnect(device_path)).await;
+                                    tracing::debug!(device_path, "device removed");
+                                    _ = emitter.send(Message::DeviceDisconnect(device_path)).await;
                                 }
                             }
                             Err(err) => tracing::error!(?err, "cannot establish removed stream"),
@@ -186,29 +265,55 @@ impl page::Page<crate::pages::Message> for Page {
 #[derive(Clone, Debug)]
 pub enum Message {
     PowerProfileChange(PowerProfile),
+    /// Update the system battery
     UpdateBattery(Battery),
+    /// Update the battery of a connected device
+    UpdateDeviceBattery(String, Battery),
     UpdateConnectedDevices(Vec<ConnectedDevice>),
     DeviceDisconnect(String),
     DeviceConnect(ConnectedDevice),
     ScreenOffTimeChange(Option<Duration>),
     SuspendOnAcTimeChange(Option<Duration>),
     SuspendOnBatteryTimeChange(Option<Duration>),
+    BackendAvailabilityCheck(Option<backend::PowerBackendEnum>),
+    CurrentPowerProfileUpdate(PowerProfile),
     Surface(surface::Action),
+}
+
+impl From<Message> for crate::app::Message {
+    fn from(message: Message) -> Self {
+        crate::pages::Message::Power(message).into()
+    }
+}
+
+impl From<Message> for crate::pages::Message {
+    fn from(message: Message) -> Self {
+        crate::pages::Message::Power(message)
+    }
 }
 
 impl Page {
     pub fn update(&mut self, message: Message) -> Task<crate::app::Message> {
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
-        let backend = runtime.block_on(backend::get_backend());
-
         match message {
             Message::PowerProfileChange(p) => {
-                if let Some(b) = backend {
-                    runtime.block_on(b.set_power_profile(p));
+                if let Some(ref backend) = self.backend {
+                    self.current_power_profile = Some(p);
+                    let backend = backend.clone();
+                    return cosmic::Task::future(async move {
+                        backend.set_power_profile(p).await;
+                        crate::app::Message::None
+                    });
                 }
             }
             Message::UpdateBattery(battery) => self.battery = battery,
+            Message::UpdateDeviceBattery(path, battery) => {
+                for device in &mut self.connected_devices {
+                    if device.device_path == path {
+                        device.battery = battery;
+                        break;
+                    }
+                }
+            }
             Message::UpdateConnectedDevices(connected_devices) => {
                 self.connected_devices = connected_devices;
             }
@@ -239,11 +344,36 @@ impl Page {
             Message::DeviceDisconnect(device_path) => self
                 .connected_devices
                 .retain(|device| device.device_path != device_path),
-            Message::DeviceConnect(connected_device) => {
-                self.connected_devices.push(connected_device)
+            Message::DeviceConnect(new_device) => {
+                // If a connected device already exists at a path, replace it.
+                if let Some(old) = self
+                    .connected_devices
+                    .iter_mut()
+                    .find(|existing| existing.device_path == new_device.device_path)
+                {
+                    *old = new_device;
+                } else {
+                    self.connected_devices.push(new_device)
+                }
             }
             Message::Surface(a) => {
                 return cosmic::task::message(crate::app::Message::Surface(a));
+            }
+            Message::BackendAvailabilityCheck(backend) => {
+                self.backend.clone_from(&backend);
+
+                // If backend is available, get the current power profile
+                if let Some(backend) = backend {
+                    return cosmic::Task::future(async move {
+                        let profile = backend.get_current_power_profile().await;
+                        crate::app::Message::PageMessage(crate::pages::Message::Power(
+                            Message::CurrentPowerProfileUpdate(profile),
+                        ))
+                    });
+                }
+            }
+            Message::CurrentPowerProfileUpdate(profile) => {
+                self.current_power_profile = Some(profile);
             }
         };
         Task::none()
@@ -368,35 +498,31 @@ fn profiles() -> Section<crate::pages::Message> {
     Section::default()
         .title(fl!("power-mode"))
         .descriptions(descriptions)
-        .view::<Page>(move |_binder, _page, section| {
+        .view::<Page>(move |_binder, page, section| {
             let mut section = settings::section().title(&section.title);
 
-            let runtime = tokio::runtime::Runtime::new().unwrap();
-
-            let backend = runtime.block_on(backend::get_backend());
-
-            if let Some(b) = backend {
+            if page.backend.is_some() {
                 let profiles = backend::get_power_profiles();
 
-                let current_profile = runtime.block_on(b.get_current_power_profile());
-
-                section = profiles
-                    .into_iter()
-                    .map(|profile| {
-                        settings::item_row(vec![
-                            radio(
-                                widget::column::with_capacity(2)
-                                    .push(text::body(profile.title()))
-                                    .push(text::caption(profile.description())),
-                                profile,
-                                Some(current_profile),
-                                Message::PowerProfileChange,
-                            )
-                            .width(Length::Fill)
-                            .into(),
-                        ])
-                    })
-                    .fold(section, settings::Section::add);
+                if let Some(current_profile) = page.current_power_profile {
+                    section = profiles
+                        .into_iter()
+                        .map(|profile| {
+                            settings::item_row(vec![
+                                radio(
+                                    widget::column::with_capacity(2)
+                                        .push(text::body(profile.title()))
+                                        .push(text::caption(profile.description())),
+                                    profile,
+                                    Some(current_profile),
+                                    Message::PowerProfileChange,
+                                )
+                                .width(Length::Fill)
+                                .into(),
+                            ])
+                        })
+                        .fold(section, settings::Section::add);
+                }
             } else {
                 let item = text::body(fl!("power-mode", "no-backend"));
                 section = section.add(item);

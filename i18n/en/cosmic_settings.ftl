@@ -119,9 +119,9 @@ bluetooth = Bluetooth
     .disconnect = Disconnect
     .forget = Forget
     .dbus-error = An error has occurred while interacting with DBus: { $why }
-    .disabled = The bluetooth service is disabled
-    .inactive = The bluetooth service is not active
-    .unknown = The bluetooth service could not be activated. Is bluez installed?
+    .disabled = The Bluetooth service is disabled
+    .inactive = The Bluetooth service is not active
+    .unknown = The Bluetooth service could not be activated. Is BlueZ installed?
 
 bluetooth-paired = Previously Connected Devices
     .connect = Connect
@@ -203,10 +203,13 @@ fit-to-screen = Fit to Screen
 open-new-folder = Open new folder
 recent-folders = Recent Folders
 
-x-minutes = { $number } minutes
-x-hours = { $number ->
-    [1] 1 hour
-    *[other] { $number } hours
+x-minutes = { $number } { $number ->
+    [one] minute
+    *[other] minutes
+}
+x-hours = { $number } { $number ->
+    [one] hour
+    *[other] hours
 }
 never = Never
 
@@ -401,7 +404,7 @@ color = Color
     .temperature = Color temperature
 
 display = Displays
-    .desc = Manage displays, graphics switching, and night light
+    .desc = Manage displays and night light
     .arrangement = Display Arrangement
     .arrangement-desc = Drag displays to rearrange them.
     .enable = Enable display
@@ -432,9 +435,9 @@ night-light = Night Light
 
 orientation = Orientation
     .standard = Standard
-    .rotate-90 = Rotate 90
-    .rotate-180 = Rotate 180
-    .rotate-270 = Rotate 270
+    .rotate-90 = Rotate 90°
+    .rotate-180 = Rotate 180°
+    .rotate-270 = Rotate 270°
 
 vrr = Variable refresh rate
     .enabled = Enabled
@@ -469,6 +472,9 @@ sound-input = Input
     .volume = Input volume
     .device = Input device
     .level = Input level
+
+amplification = Amplification
+    .desc = Allows raising the volume to 150%.
 
 sound-alerts = Alerts
     .volume = Alerts volume
@@ -641,6 +647,7 @@ nav-shortcuts = Navigation
 manage-windows = Manage windows
     .close = Close window
     .maximize = Maximize window
+    .fullscreen = Fullscreen window
     .minimize = Minimize window
     .resize-inwards = Resize window inwards
     .resize-outwards = Resize window outwards
@@ -689,8 +696,10 @@ system-shortcut = System
     .play-pause = Play/Pause
     .play-next = Next track
     .play-prev = Previous track
+    .poweroff = Power off
     .screenshot = Take a screenshot
     .terminal = Open a terminal
+    .touchpad-toggle = Toggle touchpad
     .volume-lower = Decrease audio output volume
     .volume-raise = Increase audio output volume
     .web-browser = Open a web browser
@@ -779,7 +788,7 @@ time-format = Date & Time Format
     .monday = Monday
 
 time-region = Region & Language
-    .desc = Format dates, times, and numbers based on your region
+    .desc = Format dates, times, and numbers based on your region.
 
 formatting = Formatting
     .dates = Dates
@@ -790,7 +799,7 @@ formatting = Formatting
     .paper = Paper
 
 preferred-languages = Preferred Languages
-    .desc = The order of languages determines which language is used for the translation of the desktop. Changes take effect on next login.
+    .desc = The order of languages determines which language is used for the user interface. Changes take effect on next login.
 
 add-language = Add language
     .context = Add Language
@@ -821,10 +830,10 @@ default-apps = Default Applications
 startup-apps = Startup Applications
     .desc = Configure applications which run on login.
     .add = Add app
-    .user = User specific applications
-    .user-description = These applications are launched when you log into your current user.
+    .user = Applications launched when you log in
+    .none = No startup applications added
     .remove-dialog-title = Remove { $name }?
-    .remove-dialog-description = Are you sure you want to remove this as a startup application?
+    .remove-dialog-description = Are you sure you want to remove this startup application?
     .search-for-application = Search for application
 
 ## Applications: Legacy Applications
@@ -848,7 +857,7 @@ legacy-app-scaling = X11 Window System Application Scaling
     .scaled-compatibility = Maximum compatibility mode
     .compatibility-description = X11 applications may appear blurry on HiDPI screens.
     .preferred-display = Preferred display for games and full screen X11 applications
-    .no-display = <None>
+    .no-display = None
 
 ## System
 
@@ -860,7 +869,7 @@ about = About
     .desc = Device name, hardware information, operating system defaults.
 
 about-device = Device name
-    .desc = This name appears to other network or bluetooth devices.
+    .desc = This name appears to other network or Bluetooth devices.
 
 about-hardware = Hardware
     .model = Hardware model

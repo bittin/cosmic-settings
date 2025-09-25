@@ -99,7 +99,7 @@ impl page::AutoBind<crate::pages::Message> for Page {}
 
 impl page::Page<crate::pages::Message> for Page {
     fn info(&self) -> Info {
-        page::Info::new("startup-apps", "system-reboot-symbolic")
+        page::Info::new("startup-apps", "preferences-startup-applications-symbolic")
             .title(fl!("startup-apps"))
             .description(fl!("startup-apps", "desc"))
     }
@@ -114,16 +114,14 @@ impl page::Page<crate::pages::Message> for Page {
         match &self.context {
             Some(Context::AddApplication(directory_type)) => {
                 let search = widget::search_input(fl!("type-to-search"), &self.application_search)
-                    .on_input(Message::ApplicationSearch)
-                    .on_clear(Message::ApplicationSearch(String::new()))
-                    .apply(Element::from)
-                    .map(crate::pages::Message::from);
+                    .on_input(|i| Message::ApplicationSearch(i).into())
+                    .on_clear(Message::ApplicationSearch(String::new()).into())
+                    .apply(Element::from);
 
                 Some(
                     cosmic::app::context_drawer(
-                        self.add_application_context_view(directory_type.clone())
-                            .map(crate::pages::Message::from),
-                        crate::pages::Message::CloseContextDrawer,
+                        self.add_application_context_view(directory_type.clone()),
+                        crate::pages::Message::CloseContextDrawer.into(),
                     )
                     .title(fl!("startup-apps", "search-for-application"))
                     .header(search),
@@ -158,7 +156,7 @@ impl page::Page<crate::pages::Message> for Page {
         task
     }
 
-    fn dialog(&self) -> Option<Element<'_, crate::pages::Message>> {
+    fn dialog(&self) -> Option<crate::pages::Element<'_>> {
         if let Some(app_to_remove) = &self.app_to_remove {
             if let Some(cached_startup_apps) = &self.cached_startup_apps {
                 if let Some(target_directory_type) = &self.target_directory_type {
@@ -171,19 +169,21 @@ impl page::Page<crate::pages::Message> for Page {
                             ))
                             .icon(icon::from_name("dialog-warning").size(64))
                             .body(fl!("startup-apps", "remove-dialog-description"))
-                            .primary_action(button::suggested(fl!("remove")).on_press(
-                                Message::RemoveStartupApplication(
-                                    target_directory_type.clone(),
-                                    app_to_remove.clone(),
-                                    true,
+                            .primary_action(
+                                button::suggested(fl!("remove")).on_press(
+                                    Message::RemoveStartupApplication(
+                                        target_directory_type.clone(),
+                                        app_to_remove.clone(),
+                                        true,
+                                    )
+                                    .into(),
                                 ),
-                            ))
+                            )
                             .secondary_action(
                                 button::standard(fl!("cancel"))
-                                    .on_press(Message::CancelRemoveStartupApplication),
+                                    .on_press(Message::CancelRemoveStartupApplication.into()),
                             )
-                            .apply(Element::from)
-                            .map(crate::pages::Message::StartupApps),
+                            .apply(Element::from),
                     );
                 }
             }
@@ -225,6 +225,9 @@ impl Page {
 
                 let directory_to_target =
                     directories.get(0).expect("Always at least one directory");
+
+                _ = std::fs::create_dir_all(directory_to_target.as_path());
+
                 if let Ok(exists) = std::fs::exists(directory_to_target.join(file_name.clone())) {
                     if !exists {
                         // when adding an application, we want to symlink to be more user-friendly
@@ -319,7 +322,7 @@ impl Page {
     pub fn add_application_context_view(
         &self,
         directory_type: DirectoryType,
-    ) -> Element<'_, crate::pages::Message> {
+    ) -> crate::pages::Element<'_> {
         let cosmic::cosmic_theme::Spacing { space_xs, .. } = cosmic::theme::spacing();
 
         let mut list = widget::list_column();
@@ -347,9 +350,15 @@ impl Page {
                             } else {
                                 row = row.push(text(&app.appid).width(Length::Fill));
                             }
-                            row = row.push(widget::button::text(fl!("add")).on_press(
-                                Message::AddStartupApplication(directory_type.clone(), app.clone()),
-                            ));
+                            row = row.push(
+                                widget::button::text(fl!("add")).on_press(
+                                    Message::AddStartupApplication(
+                                        directory_type.clone(),
+                                        app.clone(),
+                                    )
+                                    .into(),
+                                ),
+                            );
 
                             list = list.add(row)
                         }
@@ -358,8 +367,7 @@ impl Page {
             }
         }
 
-        list.apply(Element::from)
-            .map(crate::pages::Message::StartupApps)
+        list.into()
     }
 }
 
@@ -373,63 +381,65 @@ fn apps() -> Section<crate::pages::Message> {
     Section::default()
         .title(fl!("startup-apps"))
         .view::<Page>(move |_binder, page, _section| {
-            let mut view = widget::column::with_capacity(4).spacing(space_xxs);
+            let mut view = widget::column::with_capacity(3).spacing(space_xxs);
 
             if let Some(startup_apps) = &page.cached_startup_apps {
                 let order = vec![DirectoryType::User];
                 for directory_type in order {
                     let mut section = settings::section();
 
-                    view = view
-                        .push(text::heading(directory_type.to_string()))
-                        .push(text(match directory_type {
-                            DirectoryType::User => fl!("startup-apps", "user-description"),
-                        }));
+                    view = view.push(text::heading(directory_type.to_string()));
 
                     if let Some(apps) = startup_apps.apps.get(&directory_type) {
-                        for app in apps {
-                            let mut row = widget::row::with_capacity(3)
-                                .spacing(space_xs)
-                                .align_y(Alignment::Center);
+                        if apps.is_empty() {
+                            section = section.add(text::body(fl!("startup-apps", "none")))
+                        } else {
+                            for app in apps {
+                                let mut row = widget::row::with_capacity(3)
+                                    .spacing(space_xs)
+                                    .align_y(Alignment::Center);
 
-                            row = row.push(
-                                icon::from_name(app.icon().unwrap_or("application-default"))
-                                    .size(32),
-                            );
+                                row = row.push(
+                                    icon::from_name(app.icon().unwrap_or("application-default"))
+                                        .size(32),
+                                );
 
-                            if let Some(name) = app.name(&startup_apps.locales) {
-                                row = row.push(text(name).width(Length::Fill));
-                            } else {
-                                row = row.push(text(&app.appid).width(Length::Fill));
+                                if let Some(name) = app.name(&startup_apps.locales) {
+                                    row = row.push(text::body(name).width(Length::Fill));
+                                } else {
+                                    row = row.push(text::body(&app.appid).width(Length::Fill));
+                                }
+
+                                row = row.push(
+                                    button::icon(icon::from_name("edit-delete-symbolic"))
+                                        .extra_small()
+                                        .on_press(
+                                            Message::RemoveStartupApplication(
+                                                directory_type.clone(),
+                                                app.clone(),
+                                                false,
+                                            )
+                                            .into(),
+                                        ),
+                                );
+
+                                section = section.add(row)
                             }
-
-                            row = row.push(
-                                button::icon(icon::from_name("edit-delete-symbolic"))
-                                    .extra_small()
-                                    .on_press(Message::RemoveStartupApplication(
-                                        directory_type.clone(),
-                                        app.clone(),
-                                        false,
-                                    )),
-                            );
-
-                            section = section.add(row)
                         }
                     }
 
                     let add_startup_app = widget::button::standard(fl!("startup-apps", "add"))
-                        .on_press(Message::ShowApplicationSidebar(directory_type.clone()));
+                        .on_press(Message::ShowApplicationSidebar(directory_type.clone()).into());
 
-                    view = view.push(section).push(widget::container(
+                    view = view.push(section).push(
                         widget::container(add_startup_app)
                             .width(Length::Fill)
                             .align_x(Alignment::End),
-                    ));
+                    );
                 }
             }
 
-            view.apply(Element::from)
-                .map(crate::pages::Message::StartupApps)
+            view.into()
         })
 }
 
