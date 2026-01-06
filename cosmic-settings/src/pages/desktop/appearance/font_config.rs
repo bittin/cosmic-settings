@@ -38,15 +38,12 @@ pub fn load_font_families() -> (Vec<Arc<str>>, Vec<Arc<str>>) {
                 };
 
                 if face.monospaced {
-                    if mono
-                        .last()
-                        .map_or(true, |name| &**name != font_name.as_str())
-                    {
+                    if mono.last().is_none_or(|name| &**name != font_name.as_str()) {
                         mono.push(Arc::from(font_name.as_str()));
                     }
                 } else if interface
                     .last()
-                    .map_or(true, |name| &**name != font_name.as_str())
+                    .is_none_or(|name| &**name != font_name.as_str())
                 {
                     interface.push(Arc::from(font_name.as_str()));
                 }
@@ -73,6 +70,12 @@ pub struct Model {
 
     monospace_font_families: Vec<Arc<str>>,
     pub monospace_font: FontConfig,
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Model {
@@ -118,7 +121,7 @@ impl Model {
                 };
 
                 update_config(MONOSPACE_FONT, self.monospace_font.clone());
-                return None;
+                None
             }
             ContextView::SystemFont => {
                 self.interface_font = FontConfig {
@@ -131,9 +134,9 @@ impl Model {
                 tokio::spawn(async move {
                     set_gnome_font_name(font.as_ref()).await;
                 });
-                return None;
+                None
             }
-            _ => return None,
+            _ => None,
         }
     }
 
@@ -148,7 +151,7 @@ impl Model {
                 fonts
                     .iter()
                     .filter(|f| f.to_lowercase().contains(&self.font_search))
-                    .map(|f| f.clone())
+                    .cloned()
                     .collect(),
             );
         }
@@ -175,7 +178,7 @@ impl Model {
         callback: impl Fn(Arc<str>) -> super::Message,
     ) -> Element<'_, super::Message> {
         let svg_accent = Rc::new(|theme: &cosmic::Theme| svg::Style {
-            color: Some(theme.cosmic().accent_color().into()),
+            color: Some(theme.cosmic().accent_text_color().into()),
         });
 
         let (mut families, current_font) = match *context_view {
@@ -195,6 +198,11 @@ impl Model {
             list.add(
                 settings::item_row(vec![
                     widget::text::body(&**family)
+                        .class(if selected {
+                            cosmic::theme::Text::Accent
+                        } else {
+                            cosmic::theme::Text::Default
+                        })
                         .wrapping(Wrapping::Word)
                         .width(cosmic::iced::Length::Fill)
                         .into(),

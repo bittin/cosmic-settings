@@ -6,10 +6,10 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use cosmic::app::{ContextDrawer, context_drawer};
-use cosmic::iced::{Alignment, Border, Color, Length};
+use cosmic::iced::{Alignment, Length};
 use cosmic::iced_core::text::Wrapping;
-use cosmic::widget::{self, button, container};
-use cosmic::{Apply, Element, theme};
+use cosmic::widget::{self, button};
+use cosmic::{Apply, Element};
 use cosmic_config::{ConfigGet, ConfigSet};
 use cosmic_settings_page::Section;
 use cosmic_settings_page::{self as page, section};
@@ -81,7 +81,7 @@ impl Ord for SystemLocale {
 
 impl PartialOrd for SystemLocale {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.display_name.partial_cmp(&other.display_name)
+        Some(self.cmp(other))
     }
 }
 
@@ -204,24 +204,22 @@ impl Page {
     pub fn update(&mut self, message: Message) -> cosmic::Task<crate::app::Message> {
         match message {
             Message::AddLanguage(id) => {
-                if let Some(language) = self.available_languages.get(id) {
-                    if let Some((config, locales)) = self.config.as_mut() {
-                        if !locales.contains(&language.lang_code) {
-                            locales.push(language.lang_code.clone());
-                            _ = config.set("system_locales", &locales);
-                        }
-                    }
+                if let Some(language) = self.available_languages.get(id)
+                    && let Some((config, locales)) = self.config.as_mut()
+                    && !locales.contains(&language.lang_code)
+                {
+                    locales.push(language.lang_code.clone());
+                    _ = config.set("system_locales", &locales);
                 }
             }
 
             Message::RemoveLanguage(id) => {
-                if let Some(language) = self.available_languages.remove(id) {
-                    if let Some((config, locales)) = self.config.as_mut() {
-                        if let Some(pos) = locales.iter().position(|l| l == &language.lang_code) {
-                            locales.remove(pos);
-                            _ = config.set("system_locales", &locales);
-                        }
-                    }
+                if let Some(language) = self.available_languages.remove(id)
+                    && let Some((config, locales)) = self.config.as_mut()
+                    && let Some(pos) = locales.iter().position(|l| l == &language.lang_code)
+                {
+                    locales.remove(pos);
+                    _ = config.set("system_locales", &locales);
                 }
             }
 
@@ -235,9 +233,11 @@ impl Page {
                     let region = region.lang_code.clone();
 
                     return cosmic::task::future(async move {
-                        _ = set_locale(lang, region.clone()).await;
-
-                        update_time_settings_after_region_change(region);
+                        if let Ok(exit_status) = set_locale(lang, region.clone()).await
+                            && exit_status.success()
+                        {
+                            update_time_settings_after_region_change(region);
+                        }
 
                         Message::Refresh(Arc::new(page_reload().await))
                     });
@@ -313,24 +313,23 @@ impl Page {
 
                     _ = config.set("system_locales", &locales);
 
-                    if let Some(language_code) = locales.get(0) {
-                        if let Some(language) = self
+                    if let Some(language_code) = locales.first()
+                        && let Some(language) = self
                             .available_languages
                             .values()
                             .find(|lang| &lang.lang_code == language_code)
-                        {
-                            let language = language.clone();
-                            self.language = Some(language.clone());
-                            let region = self.region.clone();
+                    {
+                        let language = language.clone();
+                        self.language = Some(language.clone());
+                        let region = self.region.clone();
 
-                            tokio::spawn(async move {
-                                _ = set_locale(
-                                    language.lang_code.clone(),
-                                    region.unwrap_or(language).lang_code.clone(),
-                                )
-                                .await;
-                            });
-                        }
+                        tokio::spawn(async move {
+                            _ = set_locale(
+                                language.lang_code.clone(),
+                                region.unwrap_or(language).lang_code.clone(),
+                            )
+                            .await;
+                        });
                     }
                 }
             }
@@ -344,9 +343,8 @@ impl Page {
 
         let search_input = &self.add_language_search.trim().to_lowercase();
 
-        let svg_accent = Rc::new(|theme: &cosmic::Theme| {
-            let color = theme.cosmic().accent_text_color().into();
-            cosmic::widget::svg::Style { color: Some(color) }
+        let svg_accent = Rc::new(|theme: &cosmic::Theme| cosmic::widget::svg::Style {
+            color: Some(theme.cosmic().accent_text_color().into()),
         });
 
         for (id, available_language) in &self.available_languages {
@@ -356,9 +354,10 @@ impl Page {
                     .to_lowercase()
                     .contains(search_input)
             {
-                let is_installed = self.config.as_ref().map_or(false, |(_, locales)| {
-                    locales.contains(&available_language.lang_code)
-                });
+                let is_installed = self
+                    .config
+                    .as_ref()
+                    .is_some_and(|(_, locales)| locales.contains(&available_language.lang_code));
 
                 let button = widget::settings::item_row(vec![
                     widget::text::body(&available_language.display_name)
@@ -486,7 +485,7 @@ impl Page {
                 let is_selected = self
                     .region
                     .as_ref()
-                    .map_or(false, |l| l.lang_code == locale.lang_code);
+                    .is_some_and(|l| l.lang_code == locale.lang_code);
 
                 let button = widget::settings::item_row(vec![
                     widget::text::body(&locale.region_name)
@@ -818,6 +817,7 @@ fn popover_button(id: usize, expanded: bool) -> Element<'static, Message> {
 
     if expanded {
         widget::popover(button)
+            .position(widget::popover::Position::Bottom)
             .popup(popover_menu(id))
             .on_close(Message::ExpandLanguagePopover(None))
             .into()
@@ -827,38 +827,31 @@ fn popover_button(id: usize, expanded: bool) -> Element<'static, Message> {
 }
 
 fn popover_menu(id: usize) -> Element<'static, Message> {
-    widget::column::with_children(vec![
+    widget::column::with_children([
         popover_menu_row(
             id,
             fl!("keyboard-sources", "move-up"),
             SourceContext::MoveUp,
         ),
-        cosmic::widget::divider::horizontal::default().into(),
+        widget::divider::horizontal::default()
+            .apply(widget::container)
+            .padding([0, 8])
+            .into(),
         popover_menu_row(
             id,
             fl!("keyboard-sources", "move-down"),
             SourceContext::MoveDown,
         ),
-        cosmic::widget::divider::horizontal::default().into(),
+        widget::divider::horizontal::default()
+            .apply(widget::container)
+            .padding([0, 8])
+            .into(),
         popover_menu_row(id, fl!("keyboard-sources", "remove"), SourceContext::Remove),
     ])
-    .padding(8)
-    .width(Length::Shrink)
-    .height(Length::Shrink)
-    .apply(cosmic::widget::container)
-    .class(cosmic::theme::Container::custom(|theme| {
-        let cosmic = theme.cosmic();
-        container::Style {
-            icon_color: Some(theme.cosmic().background.on.into()),
-            text_color: Some(theme.cosmic().background.on.into()),
-            background: Some(Color::from(theme.cosmic().background.base).into()),
-            border: Border {
-                radius: cosmic.corner_radii.radius_m.into(),
-                ..Default::default()
-            },
-            shadow: Default::default(),
-        }
-    }))
+    .width(Length::Fixed(200.0))
+    .apply(widget::container)
+    .padding(cosmic::theme::spacing().space_xxs)
+    .class(cosmic::theme::Container::Dropdown)
     .into()
 }
 
@@ -867,24 +860,23 @@ fn popover_menu_row(
     label: String,
     message: impl Fn(usize) -> SourceContext + 'static,
 ) -> cosmic::Element<'static, Message> {
+    let spacing = cosmic::theme::spacing();
     widget::text::body(label)
-        .apply(widget::container)
-        .class(cosmic::theme::Container::custom(|theme| {
-            widget::container::Style {
-                background: None,
-                ..widget::container::Catalog::style(theme, &cosmic::theme::Container::List)
-            }
-        }))
+        .align_y(Alignment::Center)
         .apply(button::custom)
-        .on_press(())
-        .class(theme::Button::Transparent)
+        .padding([spacing.space_xxxs, spacing.space_xs])
+        .width(Length::Fill)
+        .class(cosmic::theme::Button::MenuItem)
+        .on_press(Message::SourceContext(message(id)))
         .apply(Element::from)
-        .map(move |()| Message::SourceContext(message(id)))
 }
 
-pub async fn set_locale(lang: String, region: String) {
+pub async fn set_locale(
+    lang: String,
+    region: String,
+) -> Result<std::process::ExitStatus, std::io::Error> {
     eprintln!("setting locale lang={lang}, region={region}");
-    _ = tokio::process::Command::new("localectl")
+    tokio::process::Command::new("localectl")
         .arg("set-locale")
         .args(&[
             ["LANG=", &lang].concat(),
@@ -899,7 +891,7 @@ pub async fn set_locale(lang: String, region: String) {
             ["LC_TIME=", &region].concat(),
         ])
         .status()
-        .await;
+        .await
 }
 
 fn parse_locale(locale: &str) -> Option<Locale> {

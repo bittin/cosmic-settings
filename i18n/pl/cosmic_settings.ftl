@@ -1,5 +1,5 @@
 app = Ustawienia COSMIC
-dbus-connection-error = Nieudane połączenie do DBus
+dbus-connection-error = Nieudane połączenie z DBus
 ok = OK
 unknown = Nieznane
 number = { $number }
@@ -38,7 +38,7 @@ auth-dialog = Konieczne uwierzytelnienie
     .vpn-description = Wprowadź nazwę użytkownika i hasło wymagane przez usługę VPN.
     .wifi-description = Wprowadź hasło lub klucz szyfrowania. Możesz też połączyć się, używając przycisku „WPS” na routerze.
 forget-dialog = Chcesz zapomnieć o tej sieci Wi-Fi?
-    .description = Będziesz musiał(a) wprowadzić hasło jeszcze raz, aby ponownie użyć tej sieci Wi-Fi.
+    .description = By znów używać tej sieci Wi-Fi będzie konieczne ponowne wprowadzenie hasła.
 network-device-state =
     .activated = Połączono
     .config = Łączenie
@@ -55,8 +55,8 @@ network-device-state =
     .unmanaged = Niezarządzane
     .unplugged = Odłączono kabel
 remove-connection-dialog = Usunąć profil połączenia?
-    .vpn-description = Będziesz musiał(a) wprowadzić hasło jeszcze raz, aby ponownie użyć tej sieci.
-    .wired-description = Będziesz musiał(a) utworzyć profil jeszcze raz, aby ponownie użyć tej sieci Wi-Fi.
+    .vpn-description = By znów używać tej sieci konieczne będzie ponowne wprowadzenie hasła..
+    .wired-description = Będzie konieczne ponowne stworzenie profilu by go w przyszłości używać.
 vpn = VPN
     .connections = Połączenia VPN
     .error = Nie udało się dodać konfiguracji VPN
@@ -110,14 +110,14 @@ bluetooth = Bluetooth
     .dbus-error = Błąd interakcji z DBus: { $why }
     .disabled = Usługa bluetooth jest wyłączona
     .inactive = Usługa bluetooth nie jest aktywna
-    .unknown = Nie można aktywować usługi bluetooth. Czy bluez jest zainstalowany?
+    .unknown = Nie można aktywować usługi Bluetooth. Czy BlueZ jest zainstalowany?
 bluetooth-paired = Wcześniej połączone urządzenia
     .connect = Połącz
     .battery = { $percentage }% baterii
 bluetooth-confirm-pin = Potwierdź PIN Bluetooth
-    .description = Potwierdź, że następujący PIN zgadza się z wyświetlanym na { $device }
-bluetooth-available = Urządzenia w pobliżu
-bluetooth-adapters = Adaptery Bluetooth
+    .description = Potwierdź, że ten kod PIN i wyświetlany na { $device } są jednakowe
+bluetooth-available = Pobliskie urządzenia
+bluetooth-adapters = Adaptery bluetooth
 
 ## Accessibility
 
@@ -139,7 +139,7 @@ magnifier = Lupa
             [zero] { "" }
            *[other]
                 { "" }
-                { $zoom_in } aby przybliżyć,
+                { $zoom_in } aby zbliżyć,
         }{ $zoom_out ->
             [zero] { "" }
            *[other]
@@ -147,11 +147,11 @@ magnifier = Lupa
                 { $zoom_out } aby oddalić,
         }
         Super+Scroll
-    .scroll_controls = Aktywuj przybliżanie myszą lub touchpadem za pomocą Super + Scroll
-    .show_overlay = Pokaż Nakładkę Lupy
+    .scroll_controls = Aktywuj zbliżanie myszą lub touchpadem za pomocą Super + scroll
+    .show_overlay = Pokaż nakładkę lupy
     .increment = Inkrementacja przybliżenia
     .signin = Uruchom lupę przy logowaniu
-    .applet = Włączanie/wyłączanie lupy w aplecie na panelu
+    .applet = Przełącznik lupy w aplecie na panelu
     .movement = Widok powiększenia porusza się
     .continuous = Stale ze wskaźnikiem
     .onedge = Gdy wskaźnik osiągnie krawędź
@@ -177,7 +177,7 @@ wallpaper = Tapeta
     .image-dialog = Wybierz obraz tapety
     .plural = Tapety
     .same = Ta sama tapeta na wszystkich wyświetlaczach
-    .slide = Pokaz Slajdów
+    .slide = Pokaz slajdów
 add-color = Dodaj kolor
 add-image = Dodaj obraz
 all-displays = Wszystkie wyświetlacze
@@ -204,9 +204,9 @@ never = Nigdy
 ## Desktop: Appearance
 
 appearance = Wygląd
-    .desc = Kolory akcentów i motywy.
+    .desc = Kolory akcentów i motywy
 accent-color = Kolory akcentów
-app-background = Tło aplikacji oraz okien
+app-background = Tło okien
 auto = Automatyczne
 close = Zamknij
 color-picker = Wybór koloru
@@ -231,17 +231,17 @@ auto-switch = Automatycznie zmieniaj między trybem jasnym a ciemnym
 container-background = Tło kontenera
     .desc-detail = Kolor tła kontenera jest używany do panelu bocznego nawigacji, bocznego szkicownika, dialogów i podobnych widżetów. Domyślnie wywodzi się on z Aplikacji lub tła okna.
     .reset = Resetuj do automatycznych
-    .desc = Główny kolor kontenera jest używany do bocznego panelu nawigacji, bocznego szkicownika, dialogów i podobnych widżetów.
+    .desc = Jest używany do bocznego panelu nawigacji, bocznego szkicownika, dialogów i podobnych widżetów
 control-tint = Sterowanie odcieniami komponentów
-    .desc = Używany do tła standardowych przycisków, wprowadzania wyszukiwania, wprowadzania tekstu i podobnych komponentów.
+    .desc = Używany do tła standardowych przycisków, wprowadzania wyszukiwania, wprowadzania tekstu i podobnych komponentów
 frosted = Efekt zmrożonego szkła na interfejsie systemowym
-    .desc = Nakłada efekt rozmycia na panel, dok, aplety, program startowy oraz bibliotekę aplikacji.
+    .desc = Nakłada efekt rozmycia na panel, dok, aplety, program startowy oraz bibliotekę aplikacji
 enable-export = Używaj tego motywu w aplikacjach GNOME.
     .desc = Nie wszystkie toolkity wspierają automatyczne zmiany. Aplikacje spoza COSMIC mogą wymagać restartu po zmianie motywu.
 icon-theme = Motyw Ikon
-    .desc = Zastosuj inny zbiór ikon do aplikacji.
+    .desc = Zastosuj inny zbiór ikon do aplikacji
 text-tint = Odcień tekstu interfejsu
-    .desc = Kolor używany do uzyskania odcienia tekstu interfejsu, który ma wystarczający kontrast na różnych powierzchniach.
+    .desc = Kolor używany do uzyskania odcienia tekstu interfejsu, który ma wystarczający kontrast na różnych powierzchniach
 style = Styl
     .round = Okrągły
     .slightly-round = Lekko zaokrąglony
@@ -264,18 +264,17 @@ monospace-font = Czcionka o stałej szerokości
 ## Desktop: Notifications
 
 notifications = Powiadomienia
-    .desc = Nie Przeszkadzać, powiadomienia ekranu blokady oraz ustawienia konkretnej aplikacji.
+    .desc = Nie Przeszkadzać, powiadomienia ekranu blokady oraz ustawienia konkretnej aplikacji
 
 ## Desktop: Panel
 
 panel = Panel
-    .desc = Główna belka z menu i apletami.
+    .desc = Główna belka z menu i apletami
 add = Dodaj
 add-applet = Dodaj aplet
 all = Wszystkie
 applets = Aplety
 center-segment = Człon środkowy
-drop-here = Tutaj upuść aplety
 end-segment = Człon końcowy
 large = Duży
 no-applets-found = Nie znaleziono apletów…
@@ -307,18 +306,18 @@ panel-applets = Konfiguracja
     .dock-desc = Konfiguracja apletów doku.
     .desc = Konfiguracja apletów panelu
 panel-missing = Brakuje Konfiguracji Panelu
-    .desc = Brakuje pliku konfiguracji panelu albo z powodu użycia spersonalizowanej konfiguracji, albo plik jest uszkodzony.
+    .desc = Brakuje pliku konfiguracji panelu z powodu użycia spersonalizowanej konfiguracji lub ten plik jest uszkodzony.
     .fix = Przywróć ustawienia domyślne
 
 ## Desktop: Dock
 
 dock = Dok
-    .desc = Dodatkowa belka z aplikacjami i apletami.
+    .desc = Dodatkowa belka z aplikacjami i apletami
 
 ## Desktop: Window management
 
 window-management = Zarządzanie oknami
-    .desc = Akcje klawisza super, ustawienia kontroli okien i dodatkowe ustawienia kafelkowania okien.
+    .desc = Akcje klawisza super, ustawienia kontroli okien i dodatkowe ustawienia kafelkowania okien
 super-key = Klawisz Super
     .launcher = Otwórz program startowy
     .workspaces = Otwórz obszary robocze
@@ -337,7 +336,7 @@ focus-navigation = Nawigacja aktywnym oknem
 ## Desktop: Workspaces
 
 workspaces = Obszary robocze
-    .desc = Zachowanie i orientacja obszaru roboczego.
+    .desc = Zachowanie i orientacja obszaru roboczego
 workspaces-behavior = Zachowanie obszaru roboczego
     .dynamic = Dynamiczne obszary robocze
     .dynamic-desc = Puste obszary robocze są automatycznie usuwane.
@@ -387,16 +386,16 @@ mirroring = Lustrzane Odbicie
     .project-count =
         Rzutuj na { $count } { $count ->
             [1] inny
-            [Few] inne
+            [few] inne
            *[other] innych
         } { $count ->
             [1] wyświetlacz
-            [Few] wyświetlacze
+            [few] wyświetlacze
            *[other] wyświetlaczy
         }
 night-light = Nocne Światło
     .auto = Automatyczne (od świtu do zmierzchu)
-    .desc = Zmniejsza ilość niebieskiego światła i ociepla kolory.
+    .desc = Zmniejsza ilość niebieskiego światła i ociepla kolory
 orientation = Orientacja
     .standard = Standardowa
     .rotate-90 = Obróć o 90°
@@ -414,16 +413,16 @@ dialog = Dialog
     .keep-changes = Zachowaj zmiany
     .change-prompt =
         Ustawienia automatycznie powrócą do poprzednich za { $time ->
-            [1] sekundę.
-            [few] { $time } sekundy.
-           *[other] { $time } sekund.
-        }
-    .revert-settings = Powróć do poprzednich ustawień
+            [1] sekundę
+            [few] { $time } sekundy
+           *[other] { $time } sekund
+        }.
+    .revert-settings = Przywróć poprzednie ustawienia
 
 ## Sound
 
 sound = Dźwięk
-    .desc = nd.
+    .desc = Nie dotyczy
 sound-output = Wyjście
     .volume = Głośność wyjścia
     .device = Urządzenie wyjścia
@@ -437,13 +436,12 @@ sound-input = Wejście
     .device = Urządzenie wejścia
     .level = Poziom wejścia
 amplification = Wzmocnienie
-    .desc = Pozwala zwiększać głośność do 150%.
+    .desc = Pozwala zwiększać głośność do 150%
 sound-alerts = Alerty
     .volume = Głośność alertów
     .sound = Dźwięk alertów
 sound-applications = Aplikacje
     .desc = Ustawienia i głośność aplikacji
-profile = Profil
 
 ## Power
 
@@ -479,7 +477,7 @@ connected-devices = Podłączone urządzenia
 power-mode = Profil zasilania
     .battery = Tryb oszczędzania energii
     .battery-desc = Zmniejszone zużycie energii i ciche działanie.
-    .balanced = Tryb zbalansowany
+    .balanced = Tryb zrównoważony
     .balanced-desc = Wysoka wydajność i średnie zużycie baterii.
     .performance = Tryb wysokiej wydajności
     .performance-desc = Najwyższa wydajność i zwiększone zużycie energii.
@@ -492,7 +490,7 @@ power-saving = Opcje Oszczędzania Energii
 
 ## Input
 
-acceleration-desc = Automatycznie dostosuj dokładność śledzenia do prędkości ruchu.
+acceleration-desc = Automatycznie dostosuj dokładność śledzenia do prędkości ruchu
 disable-while-typing = Wyłącz podczas pisania
 input-devices = Urządzenia wprowadzania danych
     .desc = Urządzenia wprowadzania danych
@@ -514,7 +512,7 @@ fast = Szybko
 short = Krótko
 long = Długo
 keyboard = Klawiatura
-    .desc = Wprowadzanie danych, przełączanie, wprowadzanie znaków specjalnych i skróty na klawiaturze.
+    .desc = Wprowadzanie danych, przełączanie, wprowadzanie znaków specjalnych i skróty na klawiaturze
 keyboard-sources = Źródła wprowadzania danych
     .desc = Źródła wprowadzania danych można zmienić, naciskając kombinację klawiszy Super i Spacja. Może być to spersonalizowane w ustawieniach skrótów klawiaturowych.
     .move-up = Przesuń w górę
@@ -526,6 +524,7 @@ keyboard-sources = Źródła wprowadzania danych
 keyboard-special-char = Wpis znaków specjalnych
     .alternate = Alternatywne klawisze znaków
     .compose = Klawisz komponujący
+    .compose-desc = Klawisz komponujący umożliwia wprowadzanie różnorodnych liter. By z niego skorzystać, naciśnij go a następnie kombinację znaków. Na przykład, po naciśnięciu klawisza komponującego a następnie C i o wyjdzie ©, lub klawisz komponujący a następnie a i ' wyjdzie á.
     .caps = Klawisz Caps Lock
 keyboard-typing-assist = Pisanie
     .repeat-rate = Tempo powtarzania
@@ -537,7 +536,7 @@ keyboard-numlock-boot = Numlock
     .off = Wyłącz
     .set = Ustaw stan Numlocka podczas uruchamiania
 added = Dodano
-type-to-search = Naciśnij by wyszukać…
+type-to-search = Zacznij pisać by wyszukać…
 show-extended-input-sources = Pokaż rozszerzone źródła wprowadzania
 
 ## Input: Keyboard: Shortcuts
@@ -636,6 +635,7 @@ system-shortcut = System
     .app-library = Otwórz bibliotekę aplikacji
     .brightness-down = Zmniejsz jasność wyświetlacza
     .brightness-up = Zwiększ jasność wyświetlacza
+    .display-toggle = Przełącznik wewnętrznego wyświetlacza
     .home-folder = Otwórz katalog domowy
     .keyboard-brightness-down = Zmniejsz jasność klawiatury
     .keyboard-brightness-up = Zwiększ jasność klawiatury
@@ -649,6 +649,7 @@ system-shortcut = System
     .play-prev = Poprzedni utwór
     .poweroff = Wyłącz
     .screenshot = Zrób zrzut ekranu
+    .suspend = Wstrzymaj
     .terminal = Otwórz terminal
     .touchpad-toggle = Włączanie/wyłączanie gładzika
     .volume-lower = Zmniejsz głośność wyjścia dźwięku
@@ -667,7 +668,7 @@ window-tiling = Kafelkowanie okien
     .toggle-orientation = Przełącz orientację
 replace-shortcut-dialog = Zamienić skrót?
     .desc = { $shortcut } jest używany przez { $name }. Jeśli go zamienisz, skrót do { $name } będzie wyłączony.
-zoom-in = Przybliż
+zoom-in = Zbliż
 zoom-out = Oddal
 
 ## Input: Mouse
@@ -683,9 +684,9 @@ click-behavior = Funkcjonowanie kliknięć
     .click-finger = Drugi przycisk uzyskujemy kliknięciem dwoma palcami, a środkowy przycisk trzema
     .button-areas = Drugi przycisk uzyskujemy kliknięciem prawy dolny róg, a środkowy przycisk kliknięciem środek dołu
 pinch-to-zoom = Uszczypnij, by przybliżyć
-    .desc = Zbliż dwa palce do siebie, by przybliżyć zawartość, w aplikacjach używających przybliżenia.
+    .desc = Zbliż dwa palce do siebie, by przybliżyć zawartość, w aplikacjach używających przybliżenia
 tap-to-click = Dotknij, aby kliknąć
-    .desc = Włącza klikanie przez dotknięcie jednym palcem dla głównego przycisku, dwoma palcami dla drugiego przycisku i trzema palcami dla środkowego przycisku.
+    .desc = Włącza klikanie przez dotknięcie jednym palcem dla głównego przycisku, dwoma palcami dla drugiego przycisku i trzema palcami dla środkowego przycisku
 touchpad = Gładzik
     .acceleration = Włącz przyśpieszenie gładzika
     .desc = Prędkość, opcje klikania i gesty gładzikiem.
@@ -703,17 +704,17 @@ switch-workspaces = Przełączenie pomiędzy obszarami roboczymi
     .horizontal = Przesunięcie czterema palcami w lewo/prawo
     .vertical = Przesunięcie czterema palcami w górę/dół
 switch-between-windows = Przełączenie pomiędzy oknami
-open-application-library = Otwarcie biblioteki aplikacji
+open-application-library = Otwarcie Biblioteki Aplikacji
 open-workspaces-view = Otwarcie podglądu obszarów roboczych
 
 ## Time & Language
 
 time = Czas i język
-    .desc = N/A
+    .desc = Nie dostępne
 time-date = Data i godzina
     .desc = Strefa czasowa, automatyczne ustawienia zegara oraz formatowanie czasu.
     .auto = Ustaw automatycznie
-    .auto-ntp = Czas i data ustawią się automatycznie po wybraniu strefy czasowej.
+    .auto-ntp = Czas i data ustawią się automatycznie po wybraniu strefy czasowej
 time-zone = Strefa czasowa
     .auto = Automatyczna strefa czasowa
     .auto-info = Wymaga usług lokalizacji oraz połączenia internetowego
@@ -727,7 +728,7 @@ time-format = Format daty i godziny
     .sunday = Niedziela
     .monday = Poniedziałek
 time-region = Region i język
-    .desc = Format dat, czasu i numerów odpowiadający wybranemu regionowi.
+    .desc = Format dat, czasu i numerów odpowiadający wybranemu regionowi
 formatting = Formatowanie
     .dates = Daty
     .time = Godzina
@@ -749,12 +750,12 @@ applications = Aplikacje
 ## Applications: Default Applications
 
 default-apps = Domyślne Aplikacje
-    .desc = Domyślna przeglądarka, klient email, przeglądarka plików i inne aplikacje.
+    .desc = Domyślna przeglądarka, klient e-mail, przeglądarka plików i inne aplikacje.
     .web-browser = Przeglądarka
     .file-manager = Przeglądarka plików
-    .mail-client = Klient email
+    .mail-client = Klient e-mail
     .music = Muzyka
-    .video = Wideo
+    .video = Filmy
     .photos = Obrazy
     .calendar = Kalendarz
     .terminal = Konsola
@@ -770,13 +771,13 @@ startup-apps = Aplikacje Startowe
     .none = Brak dodanych aplikacji startowych
     .remove-dialog-title = Czy usunąć { $name }?
     .remove-dialog-description = Czy jesteś pewien, że chcesz usunąć tę aplikację startową?
-    .search-for-application = Wyszukaj aplikację
+    .add-startup-app = Dodaj aplikację startową
 
 ## Applications: Legacy Applications
 
 legacy-applications = Kompatybilność Aplikacji X11
-    .desc = Skalowanie i globalne skróty klawiszowe w aplikacjach systemu okien X11.
-legacy-app-global-shortcuts = Globalne Skróty Klawiszowe Aplikacji X11
+    .desc = Skalowanie i globalne skróty klawiszowe w aplikacjach systemu okien X11
+legacy-app-global-shortcuts = Globalne skróty klawiszowe aplikacji X11
     .desc = Globalne skróty umożliwiają by naciśnięcia klawiszy lub przycisków myszy w aplikacjach były rozpoznawane przez inne aplikacje do między innymi funkcjonalności jak naciśnij-by-rozmawiać lub naciśnij-by-wyciszyć. Domyślnie jest to zablokowane w aplikacjach X11, by nie miały dostępu do śledzenia naciśnięć klawiszy i przyciśnięć myszy w aplikacjach mogących zawierać poufne informacje.
     .none = Żadne przyciski
     .modifiers = Modyfikatory (Super, Shift, Control, Alt)
@@ -795,14 +796,14 @@ legacy-app-scaling = Skalowanie aplikacji systemu okien X11
 
 ## System
 
-system = System i Konta
+system = System i konta
 
 ## System: About
 
 about = O systemie
-    .desc = Nazwa urządzenia, informacje o sprzęcie, domyślne ustawienia systemu.
+    .desc = Nazwa urządzenia, informacje o sprzęcie, domyślne ustawienia systemu
 about-device = Nazwa urządzenia
-    .desc = Ta nazwa wyświetla się innym w sieci i na urządzeniach bluetooth.
+    .desc = Ta nazwa wyświetla się innym w sieci i na urządzeniach bluetooth
 about-hardware = Sprzęt
     .model = Model sprzętu
     .memory = Pamięć
@@ -812,6 +813,7 @@ about-hardware = Sprzęt
 about-os = System operacyjny
     .os = System operacyjny
     .os-architecture = Architektura systemu operacyjnego
+    .kernel = Wersja kernela
     .desktop-environment = Środowisko graficzne
     .windowing-system = System okien
 about-related = Pokrewne ustawienia
@@ -820,7 +822,7 @@ about-related = Pokrewne ustawienia
 ## System: Firmware
 
 firmware = Firmware
-    .desc = Szczegóły firmware.
+    .desc = Szczegóły firmware
 
 ## System: Users
 
@@ -830,12 +832,21 @@ users = Użytkownicy
     .standard = Standardowy
     .profile-add = Wybierz obraz profilu
 administrator = Administrator
-    .desc = Administratorzy mogą zmieniać ustawienia wszystkich użytkowników, dodawać i usuwać innych użytkowników.
+    .desc = Administratorzy mogą zmieniać ustawienia wszystkich użytkowników, dodawać i usuwać innych użytkowników
 add-user = Dodaj użytkownika
 change-password = Zmień hasło
 remove-user = Usuń użytkownika
 full-name = Pełna nazwa
-invalid-username = Nieprawidłowa nawa użytkownika.
-password-mismatch = Hasło i potwierdzenie hasła muszą się zgadzać.
+invalid-username = Nieprawidłowa nazwa użytkownika
+password-mismatch = Hasło i jego potwierdzenie muszą być jednakowe
 save = Zapisz
 modified = Zmodyfikowano { $count }
+place-here = Umieść tu applety
+qr-code-unavailable = Kod QR jest niedostępny
+network-name = Nazwa Sieci
+share = Udostępnij sieć
+scan-to-connect-description = Zeskanuj kod QR, aby połączyć się z tą siecią.
+sound-device-port-unplugged = Odłączone
+sound-hd-audio = Dźwięk HD
+sound-usb-audio = Dźwięk USB
+sound-device-profiles = Profile urządzeń

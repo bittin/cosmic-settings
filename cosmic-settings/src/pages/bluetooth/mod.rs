@@ -5,8 +5,8 @@ use cosmic::iced::{Alignment, Length, color};
 use cosmic::iced_core::text::Wrapping;
 use cosmic::widget::{self, settings, text};
 use cosmic::{Apply, Element, Task, theme};
+use cosmic_settings_bluetooth_subscription::*;
 use cosmic_settings_page::{self as page, Section, section};
-use cosmic_settings_subscriptions::bluetooth::*;
 use futures::StreamExt;
 use futures::channel::oneshot;
 use slab::Slab;
@@ -98,11 +98,12 @@ impl Model {
 
         self.update_status();
 
-        if let Some((path, existing)) = self.get_selected_adapter_mut() {
-            if existing.enabled == Active::Enabled && existing.scanning == Active::Disabled {
-                existing.scanning = Active::Enabling;
-                return Some(start_discovery(connection, path));
-            }
+        if let Some((path, existing)) = self.get_selected_adapter_mut()
+            && existing.enabled == Active::Enabled
+            && existing.scanning == Active::Disabled
+        {
+            existing.scanning = Active::Enabling;
+            return Some(start_discovery(connection, path));
         }
 
         None
@@ -237,7 +238,7 @@ impl page::Page<crate::pages::Message> for Page {
                 let control = widget::column::with_capacity(2)
                     .push(description)
                     .push(pin)
-                    .spacing(theme::active().cosmic().space_xxs());
+                    .spacing(theme::spacing().space_xxs);
 
                 let confirm_button =
                     widget::button::suggested(fl!("confirm")).on_press(Message::PinConfirm);
@@ -782,12 +783,11 @@ fn status() -> Section<crate::pages::Message> {
 }
 
 fn popup_button(message: Option<Message>, text: &str) -> Element<'_, Message> {
-    let theme = theme::active();
-    let theme = theme.cosmic();
+    let spacing = theme::spacing();
     widget::text::body(text)
         .align_y(Alignment::Center)
         .apply(widget::button::custom)
-        .padding([theme.space_xxxs(), theme.space_xs()])
+        .padding([spacing.space_xxxs, spacing.space_xs])
         .width(Length::Fill)
         .class(theme::Button::MenuItem)
         .on_press_maybe(message)
@@ -830,7 +830,7 @@ fn connected_devices() -> Section<crate::pages::Message> {
                         .model
                         .popup_device
                         .as_deref()
-                        .map_or(false, |p| path.as_str() == p.as_str())
+                        .is_some_and(|p| path.as_str() == p.as_str())
                     {
                         widget::popover(
                             widget::button::icon(widget::icon::from_name("view-more-symbolic"))
@@ -838,24 +838,23 @@ fn connected_devices() -> Section<crate::pages::Message> {
                         )
                         .position(widget::popover::Position::Bottom)
                         .on_close(Message::PopupDevice(None))
-                        .popup({
-                            widget::container(
-                                widget::column()
-                                    .push_maybe(device.is_connected().then(|| {
-                                        popup_button(
-                                            Some(Message::DisconnectDevice(path.clone())),
-                                            &descriptions[device_disconnect],
-                                        )
-                                    }))
-                                    .push(popup_button(
-                                        Some(Message::ForgetDevice(path.clone())),
-                                        &descriptions[device_forget],
-                                    )),
-                            )
-                            .width(Length::Fixed(200.0))
-                            .padding(theme::active().cosmic().space_xxxs())
-                            .class(theme::Container::Dialog)
-                        })
+                        .popup(
+                            widget::column()
+                                .push_maybe(device.is_connected().then(|| {
+                                    popup_button(
+                                        Some(Message::DisconnectDevice(path.clone())),
+                                        &descriptions[device_disconnect],
+                                    )
+                                }))
+                                .push(popup_button(
+                                    Some(Message::ForgetDevice(path.clone())),
+                                    &descriptions[device_forget],
+                                ))
+                                .width(Length::Fixed(200.0))
+                                .apply(widget::container)
+                                .padding(theme::spacing().space_xxs)
+                                .class(theme::Container::Dropdown),
+                        )
                         .into()
                     } else {
                         widget::button::icon(widget::icon::from_name("view-more-symbolic"))
@@ -982,7 +981,7 @@ fn multiple_adapter() -> Section<crate::pages::Message> {
                             .size(20)
                             .into(),
                         widget::horizontal_space()
-                            .width(theme::active().cosmic().space_xxs())
+                            .width(theme::spacing().space_xxs)
                             .into(),
                         text(&adapter.alias).wrapping(Wrapping::Word).into(),
                         widget::horizontal_space().into(),
@@ -1012,21 +1011,21 @@ mod systemd {
 
     pub fn activate_bluetooth() -> impl Future<Output = ()> + Send {
         tokio::process::Command::new("pkexec")
-            .args(&["systemctl", "start", "bluetooth"])
+            .args(["systemctl", "start", "bluetooth"])
             .status()
             .map(|_| ())
     }
 
     pub fn enable_bluetooth() -> impl Future<Output = ()> + Send {
         tokio::process::Command::new("pkexec")
-            .args(&["systemctl", "enable", "--now", "bluetooth"])
+            .args(["systemctl", "enable", "--now", "bluetooth"])
             .status()
             .map(|_| ())
     }
 
     pub fn is_bluetooth_enabled() -> bool {
         std::process::Command::new("systemctl")
-            .args(&["is-enabled", "bluetooth"])
+            .args(["is-enabled", "bluetooth"])
             .status()
             .map(|status| status.success())
             .unwrap_or(true)
@@ -1034,7 +1033,7 @@ mod systemd {
 
     pub fn is_bluetooth_active() -> bool {
         std::process::Command::new("systemctl")
-            .args(&["is-active", "bluetooth"])
+            .args(["is-active", "bluetooth"])
             .status()
             .map(|status| status.success())
             .unwrap_or(true)

@@ -39,6 +39,8 @@ use cosmic::{
         settings, text_input,
     },
 };
+#[cfg(any(feature = "page-window-management", feature = "page-accessibility"))]
+use cosmic_comp_config::CosmicCompConfig;
 #[cfg(feature = "wayland")]
 use cosmic_panel_config::CosmicPanelConfig;
 use cosmic_settings_page::{self as page, section};
@@ -96,7 +98,6 @@ impl SettingsApp {
             #[cfg(feature = "wayland")]
             PageCommands::Dock => self.pages.page_id::<desktop::dock::Page>(),
             PageCommands::DockApplet => self.pages.page_id::<desktop::dock::applets::Page>(),
-            PageCommands::Firmware => self.pages.page_id::<system::firmware::Page>(),
             #[cfg(feature = "page-input")]
             PageCommands::Input => self.pages.page_id::<input::Page>(),
             #[cfg(feature = "page-input")]
@@ -163,7 +164,9 @@ pub enum Message {
     Page(page::Entity),
     PageMessage(crate::pages::Message),
     #[cfg(feature = "wayland")]
-    PanelConfig(CosmicPanelConfig),
+    PanelConfig(Box<CosmicPanelConfig>),
+    #[cfg(any(feature = "page-window-management", feature = "page-accessibility"))]
+    CompConfig(Box<CosmicCompConfig>),
     SearchActivate,
     SearchChanged(String),
     SearchClear,
@@ -246,7 +249,7 @@ impl cosmic::Application for SettingsApp {
         Some(&self.nav_model)
     }
 
-    fn header_start(&self) -> Vec<Element<Self::Message>> {
+    fn header_start(&self) -> Vec<Element<'_, Self::Message>> {
         let mut widgets = Vec::new();
 
         widgets.push(if self.search_active {
@@ -330,7 +333,7 @@ impl cosmic::Application for SettingsApp {
                         tracing::error!(?why, "panel config load error");
                     }
 
-                    Message::PanelConfig(update.config)
+                    Message::PanelConfig(Box::new(update.config))
                 }),
             // TODO: This should only be active when the dock page is active.
             #[cfg(feature = "wayland")]
@@ -341,9 +344,19 @@ impl cosmic::Application for SettingsApp {
                         tracing::error!(?why, "dock config load error");
                     }
 
-                    Message::PanelConfig(update.config)
+                    Message::PanelConfig(Box::new(update.config))
                 }),
             page.subscription(self.core()).map(Message::PageMessage),
+            #[cfg(any(feature = "page-window-management", feature = "page-accessibility"))]
+            self.core()
+                .watch_config::<CosmicCompConfig>("com.system76.CosmicComp")
+                .map(|update| {
+                    for why in update.errors {
+                        tracing::error!(?why, "comp config load error");
+                    }
+
+                    Message::CompConfig(Box::new(update.config))
+                }),
         ];
 
         Subscription::batch(subscriptions)
@@ -385,19 +398,27 @@ impl cosmic::Application for SettingsApp {
                         return page.update(message).map(Into::into);
                     }
                 }
-                #[cfg(feature = "page-accessibility")]
-                crate::pages::Message::AccessibilityMagnifier(message) => {
-                    if let Some(page) = self.pages.page_mut::<accessibility::magnifier::Page>() {
-                        return page.update(self.active_page, message).map(Into::into);
-                    }
-                }
                 #[cfg(feature = "page-about")]
                 crate::pages::Message::About(message) => {
                     if let Some(page) = self.pages.page_mut::<system::about::Page>() {
                         return page.update(message).map(Into::into);
                     }
                 }
-
+                #[cfg(feature = "page-accessibility")]
+                crate::pages::Message::AccessibilityMagnifier(message) => {
+                    if let Some(page) = self.pages.page_mut::<accessibility::magnifier::Page>() {
+                        return page.update(self.active_page, message).map(Into::into);
+                    }
+                }
+                #[cfg(feature = "page-input")]
+                crate::pages::Message::AccessibilityShortcuts(message) => {
+                    if let Some(page) = self
+                        .pages
+                        .page_mut::<input::keyboard::shortcuts::accessibility::Page>()
+                    {
+                        return page.update(message).map(Into::into);
+                    }
+                }
                 crate::pages::Message::Appearance(message) => {
                     if let Some(page) = self.pages.page_mut::<appearance::Page>() {
                         return page.update(message).map(Into::into);
@@ -546,6 +567,13 @@ impl cosmic::Application for SettingsApp {
                 #[cfg(feature = "page-sound")]
                 crate::pages::Message::Sound(message) => {
                     if let Some(page) = self.pages.page_mut::<sound::Page>() {
+                        return page.update(message).map(Into::into);
+                    }
+                }
+
+                #[cfg(feature = "page-sound")]
+                crate::pages::Message::SoundDeviceProfiles(message) => {
+                    if let Some(page) = self.pages.page_mut::<sound::device_profiles::Page>() {
                         return page.update(message).map(Into::into);
                     }
                 }
@@ -740,6 +768,41 @@ impl cosmic::Application for SettingsApp {
                 return Task::batch(tasks);
             }
 
+            #[cfg(any(feature = "page-window-management", feature = "page-accessibility"))]
+            Message::CompConfig(comp_config) => {
+                let mut tasks = Vec::new();
+
+                #[cfg(feature = "page-window-management")]
+                if let Some(page) = self
+                    .pages
+                    .page_mut::<crate::pages::desktop::window_management::Page>()
+                {
+                    tasks.push(
+                        page.update(
+                            crate::pages::desktop::window_management::Message::CompConfigUpdate(
+                                comp_config.clone(),
+                            ),
+                        )
+                        .map(Into::into),
+                    );
+                }
+
+                #[cfg(feature = "page-accessibility")]
+                if let Some(page) = self.pages.page_mut::<accessibility::magnifier::Page>() {
+                    tasks.push(
+                        page.update(
+                            self.active_page,
+                            crate::pages::accessibility::magnifier::Message::CompConfigUpdate(
+                                comp_config.clone(),
+                            ),
+                        )
+                        .map(Into::into),
+                    );
+                }
+
+                return Task::batch(tasks);
+            }
+
             #[cfg(feature = "wayland")]
             Message::PanelConfig(_) => {}
             #[cfg(feature = "wayland")]
@@ -798,7 +861,7 @@ impl cosmic::Application for SettingsApp {
         .unwrap_or_else(Task::none)
     }
 
-    fn view(&self) -> Element<Message> {
+    fn view(&self) -> Element<'_, Message> {
         let view = if self.search_active && !self.search_input.is_empty() {
             self.search_view()
         } else if let Some(content) = self.pages.content(self.active_page) {
@@ -813,11 +876,11 @@ impl cosmic::Application for SettingsApp {
     }
 
     #[allow(clippy::too_many_lines)]
-    fn view_window(&self, id: window::Id) -> Element<Message> {
+    fn view_window(&self, id: window::Id) -> Element<'_, Message> {
         panic!("unknown window ID: {id:?}");
     }
 
-    fn context_drawer(&self) -> Option<ContextDrawer<Message>> {
+    fn context_drawer(&self) -> Option<ContextDrawer<'_, Message>> {
         if self.core.window.show_context {
             self.active_context_page.and_then(|context_page| {
                 self.pages.context_drawer(context_page).map(|cd| {
@@ -836,7 +899,7 @@ impl cosmic::Application for SettingsApp {
         }
     }
 
-    fn dialog(&self) -> Option<Element<Self::Message>> {
+    fn dialog(&self) -> Option<Element<'_, Self::Message>> {
         self.pages
             .dialog(self.active_page)
             .map(|e| e.map(Message::PageMessage))
@@ -939,7 +1002,7 @@ impl SettingsApp {
     /// Adds a main page to the settings application.
     fn insert_page<P: page::AutoBind<crate::pages::Message>>(
         &mut self,
-    ) -> page::Insert<crate::pages::Message> {
+    ) -> page::Insert<'_, crate::pages::Message> {
         let id = self.pages.register::<P>().id();
         self.navbar_insert(id);
 
@@ -949,7 +1012,7 @@ impl SettingsApp {
         }
     }
 
-    fn navbar_insert(&mut self, id: page::Entity) -> segmented_button::SingleSelectEntityMut {
+    fn navbar_insert(&mut self, id: page::Entity) -> segmented_button::SingleSelectEntityMut<'_> {
         let page = &self.pages.info[id];
 
         self.nav_model
@@ -961,7 +1024,7 @@ impl SettingsApp {
     }
 
     /// Displays the view of a page.
-    fn page_view(&self, content: &[section::Entity]) -> cosmic::Element<Message> {
+    fn page_view(&self, content: &[section::Entity]) -> cosmic::Element<'_, Message> {
         let page = &self.pages.page[self.active_page];
         let page_info = &self.pages.info[self.active_page];
         let mut sections_column = Vec::with_capacity(content.len());
@@ -996,7 +1059,7 @@ impl SettingsApp {
             if section
                 .show_while
                 .as_ref()
-                .map_or(true, |func| func(model.as_ref()))
+                .is_none_or(|func| func(model.as_ref()))
             {
                 sections_column.push(
                     (section.view_fn)(&self.pages, model.as_ref(), section)
@@ -1092,7 +1155,7 @@ impl SettingsApp {
     }
 
     /// Displays the search view.
-    fn search_view(&self) -> cosmic::Element<Message> {
+    fn search_view(&self) -> cosmic::Element<'_, Message> {
         let mut sections: Vec<cosmic::Element<Message>> = Vec::new();
 
         let mut current_page = page::Entity::default();
@@ -1108,7 +1171,7 @@ impl SettingsApp {
             if section
                 .show_while
                 .as_ref()
-                .map_or(true, |func| func(model.as_ref()))
+                .is_none_or(|func| func(model.as_ref()))
             {
                 let section = (section.view_fn)(&self.pages, model.as_ref(), section)
                     .map(Message::PageMessage)
@@ -1125,7 +1188,7 @@ impl SettingsApp {
     }
 
     /// Displays the sub-pages view of a page.
-    fn sub_page_view(&self, sub_pages: &[page::Entity]) -> cosmic::Element<Message> {
+    fn sub_page_view(&self, sub_pages: &[page::Entity]) -> cosmic::Element<'_, Message> {
         let page_list = sub_pages
             .iter()
             .copied()

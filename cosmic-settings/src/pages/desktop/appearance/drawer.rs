@@ -129,19 +129,19 @@ impl Content {
     ) -> Task<app::Message> {
         match message {
             FontMessage::FontLoaded(interface, mono) => {
-                return self.font_config.font_loaded(mono, interface);
+                self.font_config.font_loaded(mono, interface)
             }
             FontMessage::Search(input) => match context_view {
                 None => Task::none(),
                 Some(c) => self.font_config.search(input.to_string(), c),
             },
             FontMessage::Select(font) => {
-                if let Some(context_view) = context_view {
-                    if let Some(task) = self.font_config.select(font.to_string(), context_view) {
-                        return task;
-                    }
+                if let Some(context_view) = context_view
+                    && let Some(task) = self.font_config.select(font.to_string(), context_view)
+                {
+                    return task;
                 }
-                return Task::none();
+                Task::none()
             }
         }
     }
@@ -203,8 +203,6 @@ impl Content {
                     if let Some(ref config) = self.tk_config {
                         _ = config.set::<String>("icon_theme", theme.id);
                     }
-
-                    tokio::spawn(icon_themes::set_gnome_icon_theme(theme.name));
                 }
             }
             IconMessage::ApplyThemeGlobal(enabled) => {
@@ -443,7 +441,7 @@ impl Content {
                     })
             ),
             // Icon theme previews
-            widget::column::with_children(vec![
+            widget::column::with_children([
                 text::heading(&*ICON_THEME).into(),
                 flex_row(
                     self.icon_themes

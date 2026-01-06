@@ -69,7 +69,7 @@ impl page::Page<crate::pages::Message> for Page {
     }
 
     fn on_leave(&mut self) -> Task<crate::pages::Message> {
-        _ = self.model.on_clear();
+        self.model.on_clear();
         cosmic::iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(
             false,
         )
@@ -93,12 +93,14 @@ impl page::AutoBind<crate::pages::Message> for Page {}
 pub const fn actions() -> &'static [Action] {
     &[
         Action::System(SystemAction::AppLibrary),
+        Action::System(SystemAction::DisplayToggle),
         Action::System(SystemAction::Launcher),
         Action::System(SystemAction::WorkspaceOverview),
         Action::System(SystemAction::WindowSwitcher),
         Action::System(SystemAction::WindowSwitcherPrevious),
         Action::System(SystemAction::LogOut),
         Action::System(SystemAction::LockScreen),
+        Action::System(SystemAction::Suspend),
         Action::System(SystemAction::VolumeLower),
         Action::System(SystemAction::VolumeRaise),
         Action::System(SystemAction::Mute),

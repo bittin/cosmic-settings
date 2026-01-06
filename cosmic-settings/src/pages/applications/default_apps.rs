@@ -121,10 +121,10 @@ impl page::Page<crate::pages::Message> for Page {
 
             let mut local_list = mime_apps::List::default();
 
-            if let Some(path) = mime_apps::local_list_path() {
-                if let Ok(buffer) = std::fs::read_to_string(&path) {
-                    local_list.load_from(&buffer);
-                }
+            if let Some(path) = mime_apps::local_list_path()
+                && let Ok(buffer) = std::fs::read_to_string(&path)
+            {
+                local_list.load_from(&buffer);
             }
 
             let assocs = mime_apps::associations::by_app();
@@ -187,16 +187,13 @@ impl Page {
                             .iter()
                             .map(|m| m.essence_str())
                             .filter(|m| m.starts_with("audio"))
-                            .chain(
-                                [
-                                    "application/ogg",
-                                    "application/x-cue",
-                                    "application/x-ogg",
-                                    "audio/mp3",
-                                    "x-content/audio-cdda",
-                                ]
-                                .into_iter(),
-                            )
+                            .chain([
+                                "application/ogg",
+                                "application/x-cue",
+                                "application/x-ogg",
+                                "audio/mp3",
+                                "x-content/audio-cdda",
+                            ])
                             .collect();
                         &mime_types
                     }),
@@ -248,10 +245,11 @@ impl Page {
                     meta.selected = Some(id);
                     let appid = &meta.app_ids[id];
 
-                    if category == Category::Terminal && self.shortcuts_config.is_some() {
-                        if let Some(config) = self.shortcuts_config.as_ref() {
-                            assign_default_terminal(config, appid);
-                        }
+                    if category == Category::Terminal
+                        && self.shortcuts_config.is_some()
+                        && let Some(config) = self.shortcuts_config.as_ref()
+                    {
+                        assign_default_terminal(config, appid);
                     }
 
                     for mime in mime_types {
@@ -453,13 +451,13 @@ fn assign_default_terminal(config: &cosmic_config::Config, appid: &str) {
     if let Some(resolved_path) = resolved_path {
         let desktop_entry = DesktopEntry::from_path(resolved_path, Some(&get_languages_from_env()));
 
-        if let Ok(desktop_entry) = desktop_entry {
-            if let Some(exec) = desktop_entry.exec() {
-                actions.insert(System::Terminal, String::from(exec));
+        if let Ok(desktop_entry) = desktop_entry
+            && let Some(exec) = desktop_entry.exec()
+        {
+            actions.insert(System::Terminal, String::from(exec));
 
-                if let Err(why) = config.set("system_actions", actions) {
-                    tracing::error!(?why, "Unable to set system_actions shortcuts config");
-                }
+            if let Err(why) = config.set("system_actions", actions) {
+                tracing::error!(?why, "Unable to set system_actions shortcuts config");
             }
         }
     }
@@ -503,10 +501,10 @@ async fn load_defaults(assocs: &BTreeMap<Arc<str>, Arc<App>>, for_mimes: &[&str]
     let mut icons = Vec::new();
 
     for (id, (appid, app)) in unsorted.iter().enumerate() {
-        if let Some(current_app) = current_app {
-            if app.name.as_ref() == current_app.name.as_ref() {
-                selected = Some(id);
-            }
+        if let Some(current_app) = current_app
+            && app.name.as_ref() == current_app.name.as_ref()
+        {
+            selected = Some(id);
         }
 
         app_ids.push(appid.as_ref().into());
@@ -528,7 +526,7 @@ async fn load_defaults(assocs: &BTreeMap<Arc<str>, Arc<App>>, for_mimes: &[&str]
 
 async fn xdg_mime_query_default(mime_type: &str) -> Option<String> {
     let output = tokio::process::Command::new("xdg-mime")
-        .args(&["query", "default", mime_type])
+        .args(["query", "default", mime_type])
         .output()
         .await
         .ok()?;
@@ -565,21 +563,21 @@ async fn load_terminal_apps(assocs: &BTreeMap<Arc<str>, Arc<App>>) -> AppMeta {
 
     // Scan desktop entries for terminal applications
     for path in DesktopEntryIter::new(default_paths()) {
-        if let Ok(bytes) = std::fs::read_to_string(&path) {
-            if let Ok(entry) = DesktopEntry::from_str(&path, &bytes, None::<&[&str]>) {
-                // Check if it's a terminal application
-                if entry
-                    .categories()
-                    .map(|cats| cats.iter().any(|c| *c == "TerminalEmulator"))
-                    .unwrap_or(false)
-                {
-                    let id = entry.id();
-                    if let Some(app) = assocs.get(id) {
-                        if current_appid.as_ref().map(|c| *c == id).unwrap_or(false) {
-                            current_app = Some(app.clone());
-                        }
-                        terminals.push((Arc::from(id), app.clone()));
+        if let Ok(bytes) = std::fs::read_to_string(&path)
+            && let Ok(entry) = DesktopEntry::from_str(&path, &bytes, None::<&[&str]>)
+        {
+            // Check if it's a terminal application
+            if entry
+                .categories()
+                .map(|cats| cats.contains(&"TerminalEmulator"))
+                .unwrap_or(false)
+            {
+                let id = entry.id();
+                if let Some(app) = assocs.get(id) {
+                    if current_appid.as_ref().map(|c| *c == id).unwrap_or(false) {
+                        current_app = Some(app.clone());
                     }
+                    terminals.push((Arc::from(id), app.clone()));
                 }
             }
         }
@@ -594,10 +592,10 @@ async fn load_terminal_apps(assocs: &BTreeMap<Arc<str>, Arc<App>>) -> AppMeta {
     let mut icons = Vec::new();
 
     for (id, (appid, app)) in terminals.iter().enumerate() {
-        if let Some(ref current_app) = current_app {
-            if app.name.as_ref() == current_app.name.as_ref() {
-                selected = Some(id);
-            }
+        if let Some(ref current_app) = current_app
+            && app.name.as_ref() == current_app.name.as_ref()
+        {
+            selected = Some(id);
         }
 
         app_ids.push(appid.to_string());

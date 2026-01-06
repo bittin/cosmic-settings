@@ -1,6 +1,5 @@
 use cosmic::app::ContextDrawer;
 use cosmic::cosmic_theme::palette::WithAlpha;
-use cosmic::iced::Vector;
 use cosmic::iced::clipboard::dnd::{
     DndAction, DndDestinationRectangle, DndEvent, OfferEvent, SourceEvent,
 };
@@ -15,8 +14,8 @@ use cosmic::{
     Apply, Element,
     cosmic_config::{Config, CosmicConfigEntry},
     iced::{
-        Alignment, Color, Length, Point, Rectangle, Size, core::window, event, mouse, overlay,
-        touch,
+        Alignment, Border, Color, Length, Point, Rectangle, Size, Vector, core::window, event,
+        mouse, overlay, touch,
     },
     iced_runtime::{Task, core::id::Id},
     iced_widget::core::{
@@ -131,7 +130,7 @@ impl page::Page<crate::pages::Message> for Page {
         Some(content)
     }
 
-    fn context_drawer(&self) -> Option<ContextDrawer<pages::Message>> {
+    fn context_drawer(&self) -> Option<ContextDrawer<'_, pages::Message>> {
         Some(match self.context {
             Some(ContextDrawerVariant::AddApplet) => {
                 let search_input = text_input::search_input(fl!("search-applets"), &self.search)
@@ -171,7 +170,7 @@ pub enum Message {
     ReorderCenter(Vec<Applet<'static>>),
     ReorderEnd(Vec<Applet<'static>>),
     Applets(Vec<Applet<'static>>),
-    PanelConfig(CosmicPanelConfig),
+    PanelConfig(Box<CosmicPanelConfig>),
     StartDnd(Applet<'static>),
     // DnDTask(Arc<Box<dyn Send + Sync + Fn() -> ActionInner>>),
     Search(String),
@@ -230,7 +229,7 @@ impl Page {
     pub fn add_applet_view<T: Fn(Message) -> crate::pages::Message + Copy + 'static>(
         &self,
         msg_map: T,
-    ) -> Element<crate::pages::Message> {
+    ) -> Element<'_, crate::pages::Message> {
         let cosmic::cosmic_theme::Spacing {
             space_xxxs,
             space_xs,
@@ -244,21 +243,20 @@ impl Page {
             .filter(|a| a.matches(&self.search))
         {
             if let Some(config) = self.current_config.as_ref() {
-                if let Some(center) = config.plugins_center.as_ref() {
-                    if center.iter().any(|a| a.as_str() == info.id.as_ref()) {
-                        continue;
-                    }
+                if let Some(center) = config.plugins_center.as_ref()
+                    && center.iter().any(|a| a.as_str() == info.id.as_ref())
+                {
+                    continue;
                 }
 
-                if let Some(wings) = config.plugins_wings.as_ref() {
-                    if wings
+                if let Some(wings) = config.plugins_wings.as_ref()
+                    && wings
                         .0
                         .iter()
                         .chain(wings.1.iter())
                         .any(|a| a.as_str() == info.id.as_ref())
-                    {
-                        continue;
-                    }
+                {
+                    continue;
                 }
             }
             has_some = true;
@@ -299,7 +297,7 @@ impl Page {
     pub fn update(&mut self, message: Message) -> Task<app::Message> {
         match message {
             Message::PanelConfig(c) => {
-                self.current_config = Some(c);
+                self.current_config = Some(*c);
             }
 
             Message::ReorderStart(start_list) => {
@@ -441,8 +439,8 @@ pub fn lists<
             return Element::from(text::body(fl!("unknown")));
         };
 
-        column::with_children(vec![
-            column::with_children(vec![
+        column::with_children([
+            column::with_children([
                 text::body(fl!("start-segment")).into(),
                 AppletReorderList::new(
                     config
@@ -473,7 +471,7 @@ pub fn lists<
             ])
             .spacing(space_xxs)
             .into(),
-            column::with_children(vec![
+            column::with_children([
                 text::body(fl!("center-segment")).into(),
                 AppletReorderList::new(
                     config
@@ -503,7 +501,7 @@ pub fn lists<
             ])
             .spacing(space_xxs)
             .into(),
-            column::with_children(vec![
+            column::with_children([
                 text::body(fl!("end-segment")).into(),
                 AppletReorderList::new(
                     config
@@ -553,7 +551,15 @@ pub struct Applet<'a> {
 impl Applet<'_> {
     #[must_use]
     pub fn matches(&self, query: &str) -> bool {
-        self.name.contains(query) || self.description.contains(query) || self.id.contains(query)
+        let query = query.to_ascii_lowercase();
+
+        [
+            self.name.as_ref(),
+            self.description.as_ref(),
+            self.id.as_ref(),
+        ]
+        .iter()
+        .any(|field| field.to_ascii_lowercase().contains(&query))
     }
 }
 
@@ -590,7 +596,7 @@ impl Applet<'static> {
     }
 }
 
-impl<'a> Applet<'a> {
+impl Applet<'_> {
     fn into_owned(self) -> Applet<'static> {
         Applet {
             id: Cow::from(self.id.into_owned()),
@@ -641,10 +647,10 @@ impl<'a, Message: 'static + Clone> AppletReorderList<'a, Message> {
             .into_iter()
             .map(|info| {
                 let id_clone = info.id.to_string();
-                let is_dragged = active_dnd.as_ref().map_or(false, |dnd| dnd.id == info.id);
+                let is_dragged = active_dnd.as_ref().is_some_and(|dnd| dnd.id == info.id);
 
                 let content = if is_dragged {
-                    row::with_capacity(0).height(Length::Fixed(32.0))
+                    row().height(Length::Fixed(32.0))
                 } else {
                     row::with_children(vec![
                         icon::from_name("grip-lines-symbolic")
@@ -702,24 +708,32 @@ impl<'a, Message: 'static + Clone> AppletReorderList<'a, Message> {
             on_reorder: Box::new(on_reorder),
             on_finish: Some(on_apply_reorder),
             on_cancel: Some(on_cancel),
-            inner: if active_dnd.is_some() && applet_buttons.is_empty() {
+            inner: if applet_buttons.is_empty() {
                 container(
-                    text::body(fl!("drop-here"))
+                    text::body(fl!("place-here"))
+                        .class(theme::Text::Color(
+                            theme::active()
+                                .cosmic()
+                                .on_bg_component_color()
+                                .with_alpha(0.75)
+                                .into(),
+                        ))
                         .width(Length::Fill)
                         .height(Length::Fill)
-                        .align_y(Alignment::Center)
-                        .align_x(Alignment::Center),
+                        .center(),
                 )
                 .width(Length::Fill)
                 .height(Length::Fixed(48.0))
                 .padding(8)
-                .class(theme::Container::Custom(Box::new(move |theme| {
-                    let mut style = container::Catalog::style(theme, &theme::Container::Primary);
-                    style.border.radius = theme.cosmic().radius_s().into();
-                    style.border.color = theme.cosmic().bg_divider().into();
-                    style.border.width = 2.0;
-                    style.background = Some(Color::TRANSPARENT.into());
-                    style
+                .class(theme::Container::Custom(Box::new(|theme| {
+                    container::Style {
+                        border: Border {
+                            radius: theme.cosmic().radius_s().into(),
+                            color: theme.cosmic().bg_divider().with_alpha(0.5).into(),
+                            width: 2.0,
+                        },
+                        ..Default::default()
+                    }
                 })))
                 .into()
             } else {
@@ -859,8 +873,8 @@ pub fn dnd_icon(info: Applet<'static>, layout: &layout::Layout) -> AppletReorder
     }
 }
 
-impl<'a, Message: 'static> Widget<Message, cosmic::Theme, cosmic::Renderer>
-    for AppletReorderList<'a, Message>
+impl<Message: 'static> Widget<Message, cosmic::Theme, cosmic::Renderer>
+    for AppletReorderList<'_, Message>
 where
     Message: Clone,
 {

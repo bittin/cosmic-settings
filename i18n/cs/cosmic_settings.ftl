@@ -9,34 +9,28 @@ desktop = Plocha
 ## Desktop: Appearance
 
 appearance = Vzhled
-    .desc = Doplňkové barvy a témata.
+    .desc = Doplňkové barvy a témata
 
 ## Desktop: Notifications
 
 notifications = Oznámení
-    .desc = Nerušit, oznámení na zamykací obrazovce, a nastavení pro specifické aplikace.
+    .desc = Nerušit, oznámení na zamykací obrazovce a nastavení pro specifické aplikace
 
 ## Desktop: Options
 
-desktop-panel-options = Plocha a Panel
-    .desc = Činnost super klávesy, roh obrazovky, nastavení ovládání oken.
-hot-corner = Rohy
+hot-corner = Aktivní roh
     .top-left-corner = Povolit použití levého horního rohu pro otevření pracovních ploch
-top-panel = Horní panel
-    .workspaces = Tlačítko pro zobrazení pracovních ploch
-    .applications = Tlačítko pro zobrazení aplikací
 window-controls = Ovládání oken
     .maximize = Zobrazit tlačítko pro maximalizaci
     .minimize = Zobrazit tlačítko pro minimalizaci
     .active-window-hint = Zobrazit zvýraznění aktivního okna
-desktop-panels-and-applets = Panely na ploše a applety
 dock = Dok
-    .desc = Panel s připnutými aplikacemi.
+    .desc = Volitelná lišta pro aplikace a applety
 
 ## Desktop: Panel
 
 panel = Panel
-    .desc = Horní pole pro ovládání plochy a menu.
+    .desc = Hlavní systémová lišta pro menu a applety
 panel-behavior-and-position = Chování a pozice
     .autohide = Automaticky skrýt panel
     .dock-autohide = Automaticky skrýt dok
@@ -47,14 +41,14 @@ panel-bottom = Dole
 panel-left = Vlevo
 panel-right = Vpravo
 panel-appearance = Vzhled
-    .match = Dle systému
+    .match = Podle systému
     .light = Světlý
     .dark = Tmavý
 panel-style = Styl
-    .anchor-gap = Místo mezi panelem a krajem obrazovky
-    .dock-anchor-gap = Místo mezi dokem a krajem obrazovky
-    .extend = Roztáhnout panel ke krajům obrazovky.
-    .dock-extend = Roztáhnout panel ke krajům obrazovky.
+    .anchor-gap = Mezera mezi panelem a krajem obrazovky
+    .dock-anchor-gap = Mezera mezi dokem a krajem obrazovky
+    .extend = Roztáhnout panel ke krajům obrazovky
+    .dock-extend = Roztáhnout dok ke krajům obrazovky
     .appearance = Vzhled
     .size = Velikost
     .background-opacity = Průhlednost pozadí
@@ -64,60 +58,57 @@ panel-applets = Nastavení
     .dock-desc = Nastavit applety v doku
     .desc = Nastavit applety v panelu
 panel-missing = Nastavení panelu chybí
-    .desc = Nastavení panelu chybí kvůli použití vlastního témata nebo poškozeného souboru.
-    .fix = Nastavit výchozí nastavení
+    .desc = Soubor nastavení panelu chybí kvůli poškození nebo použití vlastního nastavení.
+    .fix = Obnovit výchozí
 applets = Applety
 start-segment = Začínající segment
 center-segment = Prostřední segment
 end-segment = Konečný segment
 add = Přidat
-add-applet = Přidat Applet
+add-applet = Přidat applet
 search-applets = Vyhledat applety...
-no-applets-found = Žádné applety nenalezeny...
+no-applets-found = Nenalezeny žádné applety...
 all = Všechny
-drop-here = Přetáhněte applety sem
 
 ## Desktop: Tapeta
 
-wallpaper = Tapeta
-    .change = Změnit obrázek každých
-    .desc = Obrázky na pozadí, barvy, nastavení prezentace.
-    .fit = Vyplnit pozadí
-    .folder-dialog = Zvolte složku s tapetami
-    .image-dialog = Zvolte obrázek tapety
-    .plural = Tapety
-    .same = Stejné pozadí na všech monitorech.
+wallpaper = Pozadí
+    .change = Měnit obrázek každých
+    .desc = Obrázky pozadí, barvy a možnosti prezentace
+    .fit = Způsob umístění pozadí
+    .folder-dialog = Vyberte složku s obrázky pozadí
+    .image-dialog = Vyberte obrázek pozadí
+    .plural = Pozadí
+    .same = Stejné pozadí na všech displejích
     .slide = Prezentace
-all-displays = Všechny monitory
+all-displays = Všechny displeje
 colors = Barvy
-fit-to-screen = Vyplnit obrazovku
+fit-to-screen = Přizpůsobit obrazovce
 x-minutes =
     { $number } { $number ->
         [one] minuta
         [few] minuty
-        [many] minut
        *[other] minut
     }
 x-hours =
     { $number } { $number ->
         [one] hodina
         [few] hodiny
-        [many] hodin
        *[other] hodin
     }
 
 ## Desktop: Workspaces
 
 workspaces = Pracovní plochy
-    .desc = Nastavit počet pracovních ploch, chování a jejich pozici.
+    .desc = Chování a orientace pracovních ploch
 workspaces-behavior = Chování pracovních ploch
     .dynamic = Dynamické pracovní plochy
-    .dynamic-desc = Automaticky odstraní prázdné pracovní plochy..
+    .dynamic-desc = Automaticky odstraní prázdné pracovní plochy.
     .fixed = Fixní množství pracovních ploch
     .fixed-desc = Přidat nebo odstranit pracovní plochy v přehledu.
-workspaces-multi-behavior = Chování při více monitorů
-    .span = Pracovní plochy obsadí více monitorů
-    .separate = Každý monitor má svou pracovní plochu
+workspaces-multi-behavior = Chování při více monitorech
+    .span = Pracovní plochy obsadí více displejů
+    .separate = Každý displej má svou vlastní pracovní plochu
 
 ## Networking: Wired
 
@@ -134,12 +125,12 @@ online-accounts = Online účty
 
 ## Time & Language
 
-time = Čas a Jazyk
+time = Čas a jazyk
     .desc = N/A
-time-date = Datum a Čas
-    .desc = Časová zóna, auomatické nastavení času a formátování času.
+time-date = Datum a čas
+    .desc = Časová zóna, automatické nastavení hodin a formátování času
     .auto = Nastavit automaticky
-    .auto-ntp = Datum a čas se aktualizují automaticky pokud je nastavena časová zóna.
+    .auto-ntp = Pokud nastavíte časovou zónu, datum a čas se bude aktualizovat automaticky
 time-zone = Časová zóna
     .auto = Automatická časová zóna
     .auto-info = Vyžaduje službu polohy a internet
@@ -152,25 +143,25 @@ time-format = Formát data a času
     .saturday = Sobota
     .sunday = Neděle
     .monday = Pondělí
-time-region = Region a Jazyk
-    .desc = Formátujte datumy, časy a čísla dle vašeho regionu.
+time-region = Region a jazyk
+    .desc = Formátujte datumy, časy a čísla podle vašeho regionu
 
 ## Sound
 
 sound = Zvuk
     .desc = N/A
 sound-output = Výstup
-    .volume = Výstupní hlasitost
+    .volume = Hlasitost výstupu
     .device = Výstupní zařízení
-    .level = Výstupní úroveň
+    .level = Úroveň výstupu
     .config = Nastavení
     .balance = Vyvážení
     .left = Levá
     .right = Pravá
 sound-input = Vstup
-    .volume = Vstupní hlasitost
+    .volume = Hlasitost vstupu
     .device = Vstupní zařízení
-    .level = Vstupní úroveň
+    .level = Úroveň vstupu
 sound-alerts = Upozornění
     .volume = Hlasitost upozornění
     .sound = Zvuk pro upozornění
@@ -184,18 +175,19 @@ system = Systém a účty
 ## System: About
 
 about = O systému
-    .desc = Název zařízení, hardwarové informace, výchozí nastavení operačního systému.
+    .desc = Název zařízení, informace o hardwaru, výchozí nastavení operačního systému
 about-device = Název počítače
-    .desc = Toto jméno se zobrazí ostatním síťovým a bluetooth zařízení.
+    .desc = Tento název se zobrazí ostatním síťovým a Bluetooth zařízením
 about-hardware = Hardware
     .model = Model hardwaru
     .memory = Paměť
     .processor = Procesor
     .graphics = Grafika
-    .disk-capacity = Kapacity disku
+    .disk-capacity = Kapacita disku
 about-os = Operační systém
     .os = Operační systém
-    .os-architecture = Architektura OS
+    .os-architecture = Architektura operačního systému
+    .kernel = Verze jádra
     .desktop-environment = Desktopové prostředí
     .windowing-system = Okenní systém
 about-related = Podobná nastavení
@@ -204,34 +196,34 @@ about-related = Podobná nastavení
 ## System: Firmware
 
 firmware = Firmware
-    .desc = Podrobnosti o firmwaru.
+    .desc = Podrobnosti o firmwaru
 
 ## System: Users
 
 users = Uživatelé
-    .desc = Ověření a uživatelské účty.
+    .desc = Ověření a uživatelské účty
     .admin = Administrátor
     .standard = Standardní
-    .profile-add = Zvolte obrázek profilu
+    .profile-add = Vyberte obrázek profilu
 
 ## Input
 
-acceleration-desc = Automaticky upravit citlivost sledování na základě rychlosti.
+acceleration-desc = Automaticky upravuje citlivost snímání podle rychlosti
 primary-button = Hlavní tlačítko
-    .desc = Nastavuje pořadí fyzických tlačítek.
+    .desc = Nastavuje pořadí fyzických tlačítek
     .left = Levé
     .right = Pravé
-scrolling = Posouvání
-    .two-finger = Posouvejte dvěma prsty
-    .edge = Posouvejte jedním prstem podél kraje
-    .speed = Rychlost posouvání
-    .natural = Přirozené posouvání
-    .natural-desc = Převrátí směr posouvání
+scrolling = Rolování
+    .two-finger = Rolovat dvěma prsty
+    .edge = Rolovat jedním prstem podél kraje
+    .speed = Rychlost rolování
+    .natural = Přirozené rolování
+    .natural-desc = Roluje obsah místo zobrazení
 
 ## Input: Keyboard
 
 keyboard = Klávesnice
-    .desc = Metody zadávání, přepínání, vkládání speciálních znaků, zkratky.
+    .desc = Metody zadávání, přepínání, vkládání speciálních znaků, zkratky
 keyboard-sources = Metody zadávání
     .desc = Metody zadávání se dají přepínat pomocí Super + Mezerník. Toto se dá změnit v nastavení klávesových zkratek.
     .move-up = Posunout nahoru
@@ -242,8 +234,9 @@ keyboard-sources = Metody zadávání
     .add = Přidat metodu zadávání
 keyboard-special-char = Zadávání speciálních znaků
     .alternate = Klávesa pro náhradní znaky
-    .compose = Compose klávesa
-    .caps = Caps Lock klávesa
+    .compose = Klávesa Compose
+    .compose-desc = Klávesa Compose umožňuje zadávat širokou škálu znaků. Pro její použití stiskněte Compose a poté zadejte sekvenci znaků. Například [Compose, C, O] vloží znak „©“, zatímco [Compose, A, ‘] znak „á“.
+    .caps = Klávesa Caps Lock
 
 ## Input: Keyboard: Shortcuts
 
@@ -253,16 +246,16 @@ keyboard-shortcuts = Klávesové zkratky
 ## Input: Mouse
 
 mouse = Myš
-    .desc = Citlivost myši, akcelerace, přirozené posouvání.
-    .speed = Citlivost myši
-    .acceleration = Povolit akceleraci myši
+    .desc = Rychlost myši, zrychlení, přirozené rolování
+    .speed = Rychlost myši
+    .acceleration = Povolit zrychlení myši
 
 ## Input: Touchpad
 
 touchpad = Touchpad
-    .acceleration = Povolit akceleraci touchpadu
-    .desc = Citlivost touchpadu, nastavení klikání, gesta.
-    .speed = Citlivost touchpadu
+    .acceleration = Povolit zrychlení touchpadu
+    .desc = Rychlost touchpadu, nastavení klikání, gesta
+    .speed = Rychlost touchpadu
 dbus-connection-error = Selhalo připojení k DBus
 ok = OK
 add-vpn = Přidat VPN
@@ -284,16 +277,16 @@ settings = Nastavení
 username = Uživatelské jméno
 visible-networks = Viditelné sítě
 identity = Identita
-dark = Tmavý
-light = Světlý
+dark = Tmavé
+light = Světlé
 wireguard-dialog = Přidat zařízení WireGuard
-    .description = Zvolte jméno zařízení pro nastavení WireGuard.
+    .description = Vyberte název zařízení pro nastavení WireGuard.
 activate = Aktivovat
 confirm = Potvrdit
 enable = Povolit
 bluetooth = Bluetooth
-    .desc = Spravovat Bluetooth zařízení
-    .status = Tento systém je viditelný jako { $aliases } dokud je nastavení Bluetooth otevřeno.
+    .desc = Správa Bluetooth zařízení.
+    .status = Tento systém je viditelný jako { $aliases }, dokud jsou otevřena nastavení Bluetooth.
     .connected = Připojeno
     .connecting = Připojování
     .disconnecting = Odpojování
@@ -332,7 +325,7 @@ open-new-folder = Otevřít novou složku
 recent-folders = Nedávné složky
 never = Nikdy
 accent-color = Doplňková barva
-app-background = Pozadí okna nebo aplikace
+app-background = Pozadí okna
 auto = Auto
 close = Zavřít
 replace = Nahradit
@@ -351,7 +344,7 @@ add-network = Přidat síť
     .profile = Přidat profil
 auth-dialog = Vyžadováno ověření
     .vpn-description = Vložte uživatelské jméno a heslo vyžadované službou VPN.
-    .wifi-description = Vložte heslo nebo šifrovací klíč. Můžete se také připojit stisknutím tlačítka "WPS" na vašem routeru.
+    .wifi-description = Vložte heslo nebo šifrovací klíč. Můžete se také připojit stisknutím tlačítka „WPS“ na vašem routeru.
 forget-dialog = Zapomenout tuto Wi-Fi síť?
     .description = Pro opětovné připojení k této Wi-Fi síti bude nutné znovu zadat heslo.
 network-device-state =
@@ -410,22 +403,22 @@ auto-switch = Automaticky přepínat mezi světlými a tmavými režimy
     .next-sunrise = Přepne na světlý režim při dalším východu slunce
     .next-sunset = Přepne na tmavý režim při dalším západu slunce
 container-background = Pozadí kontejneru
-    .desc-detail = Barva pozadí kontejneru se používá pro navigační postranní panel, boční panel, dialogy a podobné prvky. Ve výchozím nastavení je automaticky odvozena od pozadí aplikace nebo okna.
+    .desc-detail = Barva pozadí kontejneru se používá pro navigační postranní panel, výsuvný panel, dialogy a podobné prvky. Ve výchozím nastavení je automaticky odvozena od pozadí okna.
     .reset = Obnovit na auto
-    .desc = Hlavní barva kontejneru se používá pro navigační postranní panel, boční panel, dialogy a podobné prvky.
+    .desc = Používá se pro navigační postranní panel, výsuvný panel, dialogy a podobné prvky
 control-tint = Odstín ovládacích prvků
-    .desc = Používá se pro pozadí standardních tlačítek, vyhledávacích polí, textových vstupů a podobných komponent.
+    .desc = Používá se pro pozadí standardních tlačítek, vyhledávacích polí, textových vstupů a podobných komponent
 frosted = Efekt zmrazeného okna na systémovém rozhraní
-    .desc = Aplikuje rozmazané pozadí na panel, dok, applety, spouštěč a knihovnu aplikací.
-enable-export = Použít toto téma pro GNOME aplikace.
-    .desc = Ne všechny toolkity podporují automatické přepínaní. Aplikace, které nejsou postaveny na COSMIC toolkitu mohou vyžadovat restart po změně tématu.
-password-mismatch = Heslo a jeho potvrzení se musí shodovat.
-invalid-username = Neplatné uživatelské jméno.
+    .desc = Aplikuje rozmazané pozadí na panel, dok, applety, spouštěč a knihovnu aplikací
+enable-export = Použít současné téma pro GNOME aplikace
+    .desc = Ne všechny toolkity podporují automatické přepínání. Aplikace, které nejsou postaveny na COSMIC toolkitu mohou vyžadovat restart po změně tématu.
+password-mismatch = Heslo a jeho potvrzení se musí shodovat
+invalid-username = Neplatné uživatelské jméno
 icon-theme = Téma ikon
-    .desc = Aplikuje jinou sadu ikon na aplikace.
+    .desc = Aplikuje jinou sadu ikon na aplikace
 monospace-font = Monospace písmo
 window-management = Správa oken
-    .desc = Akce klávesy Super, možnosti ovládání oken a další možnosti dlaždicového režimu oken.
+    .desc = Akce klávesy Super, možnosti ovládání oken a další možnosti dlaždicového režimu oken
 window-tiling = Dlaždicový režim oken
     .horizontal = Nastavit horizontální orientaci
     .vertical = Nastavit vertikální orientaci
@@ -444,7 +437,7 @@ super-key = Akce klávesy Super
 edge-gravity = Plovoucí okna se přichytávají k blízkým krajům
 focus-navigation = Navigace zaměření
     .focus-follows-cursor = Zaměření následuje kurzor
-    .focus-follows-cursor-delay = Zaměření následuje kurzor zpoždění v ms
+    .focus-follows-cursor-delay = Zaměření následuje kurzor - zpoždění v ms
     .cursor-follows-focus = Kurzor následuje zaměření
 workspaces-overview-thumbnails = Miniatury v přehledu pracovních ploch
     .show-number = Zobrazit číslo pracovní plochy
@@ -471,16 +464,16 @@ magnifier = Lupa
                 { "" }
                 { $zoom_out } pro oddálení,
         }
-        Super + posun s myší
-    .scroll_controls = Povolit přiblížení s myší nebo touchpadem pomocí Super + Posun
-    .show_overlay = Zobrazit překryvnou vrstvu lupy
+        Super + rolování kolečkem myši
+    .scroll_controls = Povolit přiblížení s myší nebo touchpadem pomocí Super + rolování
+    .show_overlay = Zobrazit překrytí lupy
     .increment = Krok přiblížení
     .signin = Spustit lupu při přihlášení
-    .applet = Přepnout lupu zap/vyp v appletu na panelu
-    .movement = Pohyb přiblíženého pohledu
-    .continuous = Nepřetržitě s ukazatelem
+    .applet = Lupu lze přepnout v appletu na panelu
+    .movement = Pohyb přiblíženého zobrazení
+    .continuous = Neustále s ukazatelem
     .onedge = Když ukazatel dosáhne kraje
-    .centered = Pro udržení ukazatele ve středu obrazovky
+    .centered = Udržovat ukazatele ve středu obrazovky
 color-filter = Typ barevného filtru
     .unknown = Neznámý filtr aktivní
     .greyscale = Stupně šedi
@@ -488,12 +481,12 @@ color-filter = Typ barevného filtru
     .protanopia = Červeno/Zelená (oslabení červené, Protanopie)
     .tritanopia = Modro/Žlutá (oslabení modré, Tritanopie)
 text-tint = Odstín textu rozhraní
-    .desc = Barva používaná k odvození barev textu rozhraní, které mají dostatečný kontrast na různých površích.
+    .desc = Používá se k odvození barev textu rozhraní, které mají dostatečný kontrast na různých površích
 experimental-settings = Experimentální nastavení
 display = Displeje
     .desc = Spravujte displeje a noční světlo
     .arrangement = Uspořádání displejů
-    .arrangement-desc = Přetáhněte displeje pro jejich uspořádání.
+    .arrangement-desc = Přetáhněte displeje pro jejich uspořádání
     .enable = Povolit displej
     .external = { $size } { $output } Externí displej
     .laptop = { $size } Displej laptopu
@@ -526,12 +519,11 @@ mirroring = Zrcadlení
         Vysílání na { $count } { $count ->
             [one] další displej
             [few] další displeje
-            [many] dalších displejů
            *[other] dalších displejů
         }
 night-light = Noční světlo
     .auto = Automaticky (od západu do východu)
-    .desc = Snížit modré světlo teplými barvami.
+    .desc = Snižuje působení modrého světla aplikací teplých barev
 orientation = Orientace
     .standard = Standardní
     .rotate-90 = Otočit o 90°
@@ -550,30 +542,26 @@ dialog = Dialog
     .change-prompt = Změny nastavení se automaticky zruší za { $time } sekund.
     .revert-settings = Obnovit nastavení
 amplification = Zesílení
-    .desc = Umožňuje zesílit zvuk až do 150%.
-profile = Profil
-power = Napájení a Baterie
+    .desc = Umožňuje zesílit zvuk až na 150%
+power = Napájení a baterie
     .desc = Spravujte nastavení napájení
 battery = Baterie
     .minute =
         { $value } { $value ->
             [one] minuta
             [few] minuty
-            [many] minut
            *[other] minut
         }
     .hour =
         { $value } { $value ->
             [one] hodina
             [few] hodiny
-            [many] hodin
            *[other] hodin
         }
     .day =
         { $value } { $value ->
             [one] den
             [few] dny
-            [many] dní
            *[other] dní
         }
     .less-than-minute = Méně než minuta
@@ -587,25 +575,25 @@ connected-devices = Připojená zařízení
     .unknown = Neznámé zařízení
 power-mode = Režim napájení
     .battery = Prodloužená výdrž baterie
-    .battery-desc = Nižší spotřeba energie a tichý provoz.
+    .battery-desc = Velmi tichý provoz a snížená spotřeba energie
     .balanced = Vyvážený
-    .balanced-desc = Tichý provoz a střední spotřeba energie.
+    .balanced-desc = Tichý provoz a střední spotřeba energie
     .performance = Vysoký výkon
-    .performance-desc = Maximální výkon a vyšší spotřeba energie.
+    .performance-desc = Maximální výkon a vyšší spotřeba energie
     .no-backend = Nenalezen backend. Nainstalujte 'system76-power' nebo 'power-profiles-daemon'.
 power-saving = Možnosti úspory energie
-    .turn-off-screen-after = Vypnutí obrazovky za
-    .auto-suspend = Automaticky uspávat
+    .turn-off-screen-after = Vypnout obrazovku za
+    .auto-suspend = Automaticky uspat za
     .auto-suspend-ac = Automaticky uspávat při napájení z elektrické sítě
     .auto-suspend-battery = Automaticky uspávat při napájení pouze z baterie
 disable-while-typing = Zakázat při psaní
 input-devices = Vstupní zařízení
     .desc = Vstupní zařízení
 modified = { $count } změněných
-slow = Pomalý
-fast = Rychlý
-short = Krátký
-long = Dlouhý
+slow = Pomalá
+fast = Rychlá
+short = Krátké
+long = Dlouhé
 keyboard-typing-assist = Psaní
     .repeat-rate = Frekvence opakování
     .repeat-delay = Zpoždění opakování
@@ -666,14 +654,14 @@ nav-shortcuts = Navigace
             [up] nahoře
         }
     .workspace = Přepnout na pracovní plochu { $num }
-manage-windows = Spravovat okna
+manage-windows = Správa oken
     .close = Zavřít okno
     .maximize = Maximalizovat okno
     .fullscreen = Okno přes celou obrazovku
     .minimize = Minimalizovat okno
     .resize-inwards = Zmenšit okno
     .resize-outwards = Zvětšit okno
-    .toggle-sticky = Přepnout přichycené okno
+    .toggle-sticky = Přepnout přilepené okno
 zoom-in = Přiblížit
 zoom-out = Oddálit
 preferred-languages = Preferované jazyky
@@ -684,12 +672,12 @@ install-additional-languages = Instalovat další jazyky
 region = Region
 applications = Aplikace
 administrator = Administrátor
-    .desc = Administrátoři mohou měnit nastavení všech uživatelů a přidávat či odstraňovat ostatní uživatele.
+    .desc = Administrátoři mohou měnit nastavení všech uživatelů a přidávat či odstraňovat ostatní uživatele
 add-user = Přidat uživatele
 change-password = Změnit heslo
 remove-user = Odstranit uživatele
 full-name = Celé jméno
-move-windows = Přesouvat okna
+move-windows = Přesouvání oken
     .direction =
         Přesunout okno { $direction ->
            *[down] dolů
@@ -723,19 +711,21 @@ system-shortcut = Systém
     .app-library = Otevřít knihovnu aplikací
     .brightness-down = Snížit jas displeje
     .brightness-up = Zvýšit jas displeje
+    .display-toggle = Přepnout interní displej
     .home-folder = Otevřít domovskou složku
     .keyboard-brightness-down = Snížit jas klávesnice
     .keyboard-brightness-up = Zvýšit jas klávesnice
-    .launcher = Otevřít spouštěč
+    .launcher = Otevřít Spouštěč
     .log-out = Odhlásit se
     .lock-screen = Zamknout obrazovku
     .mute = Ztlumit zvukový výstup
     .mute-mic = Ztlumit vstup mikrofonu
-    .play-pause = Přehrát/Pozastavit
+    .play-pause = Přehrát/pozastavit
     .play-next = Další stopa
     .play-prev = Předchozí stopa
     .poweroff = Vypnout
     .screenshot = Pořídit snímek obrazovky
+    .suspend = Uspat
     .terminal = Otevřít terminál
     .touchpad-toggle = Přepnout touchpad
     .volume-lower = Snížit hlasitost zvukového výstupu
@@ -750,9 +740,9 @@ click-behavior = Chování kliknutí
     .click-finger = Pravé kliknutí dvěma prsty a střední tlačítko třemi prsty
     .button-areas = Pravé kliknutí v pravém dolním rohu a střední tlačítko uprostřed dolní části
 pinch-to-zoom = Přiblížení gestem
-    .desc = Použijte dva prsty k přiblížení obsahu v aplikacích, které to podporují.
+    .desc = Použijte dva prsty k přiblížení obsahu v aplikacích, které to podporují
 tap-to-click = Kliknout klepnutím
-    .desc = Povolí klepnutí jedním prstem pro primární kliknutí, dvěma prsty pro sekundární kliknutí a třemi prsty pro prostřední kliknutí.
+    .desc = Povolí klepnutí jedním prstem pro primární kliknutí, dvěma prsty pro sekundární kliknutí a třemi prsty pro prostřední kliknutí
 gestures = Gesta
     .four-finger-down = Přejetí čtyřmi prsty dolů
     .four-finger-left = Přejetí čtyřmi prsty doleva
@@ -773,7 +763,7 @@ formatting = Formátování
     .measurement = Jednotky
     .paper = Papír
 default-apps = Výchozí aplikace
-    .desc = Výchozí webový prohlížeč, poštovní klient, prohlížeč souborů a další aplikace.
+    .desc = Výchozí webový prohlížeč, poštovní klient, prohlížeč souborů a další aplikace
     .web-browser = Webový prohlížeč
     .file-manager = Prohlížeč souborů
     .mail-client = Poštovní klient
@@ -785,15 +775,15 @@ default-apps = Výchozí aplikace
     .other-associations = Ostatní asociace
     .text-editor = Textový editor
 startup-apps = Automatické spouštění aplikací
-    .desc = Nastavte aplikace, které se spustí při přihlášení.
+    .desc = Nastavte aplikace, které se spustí při přihlášení
     .add = Přidat aplikaci
     .user = Aplikace spouštěné při přihlášení
     .none = Nejsou přidány žádné aplikace pro automatické spouštění
     .remove-dialog-title = Odstranit { $name }?
-    .remove-dialog-description = Opravdu chcete odstranit tuto aplikaci z automatického spouštění?
-    .search-for-application = Hledat aplikaci
+    .remove-dialog-description = Odstranit tuto aplikaci z automatického spouštění?
+    .add-startup-app = Přidat aplikaci pro spouštění
 legacy-applications = Kompatibilita X11 aplikací
-    .desc = Škálování a globální klávesové zkratky aplikací využívajících okenní systém X11.
+    .desc = Škálování a globální klávesové zkratky aplikací využívajících okenní systém X11
 legacy-app-global-shortcuts = Globální klávesové zkratky X11 aplikací
     .desc = Globální klávesové zkratky umožňují, aby stisky kláves a události tlačítek myši provedené v aplikacích byly rozpoznány i jinými aplikacemi, například pro funkce typu push-to-talk nebo push-to-mute. Ve výchozím nastavení jsou v aplikacích X11 zakázány, aby jiné aplikace nemohly sledovat stisky kláves a události myši obsahující citlivé informace.
     .none = Žádné klávesy
@@ -803,10 +793,19 @@ legacy-app-global-shortcuts = Globální klávesové zkratky X11 aplikací
     .mouse = Události tlačítek myši v X11 aplikacích
 legacy-app-scaling = Škálování aplikací v okenním systému X11
     .scaled-gaming = Optimalizovat pro hry a aplikace na celé obrazovce
-    .gaming-description = Aplikace X11 se mohou zdát o něco větší/menší v porovnání s Wayland aplikacemi.
+    .gaming-description = Aplikace X11 se mohou zdát o něco větší/menší v porovnání s Wayland aplikacemi
     .scaled-applications = Optimalizovat pro aplikace
-    .applications-description = Hry a aplikace X11 na celé obrazovce nemusí odpovídat rozlišení vašeho displeje.
+    .applications-description = Hry a aplikace X11 na celé obrazovce nemusí odpovídat rozlišení vašeho displeje
     .scaled-compatibility = Režim maximální kompatibility
-    .compatibility-description = Aplikace X11 mohou na HiDPI obrazovkách vypadat rozmazaně.
+    .compatibility-description = Aplikace X11 mohou na HiDPI obrazovkách vypadat rozmazaně
     .preferred-display = Preferovaný displej pro hry a aplikace X11 na celé obrazovce
     .no-display = Žádný
+place-here = Sem umístěte applety
+network-name = Název sítě
+qr-code-unavailable = QR kód není dostupný
+scan-to-connect-description = Naskenujte QR kód pro připojení k této síti.
+share = Sdílet síť
+sound-device-port-unplugged = Odpojeno
+sound-device-profiles = Profily zařízení
+sound-hd-audio = HD Zvuk
+sound-usb-audio = USB Zvuk

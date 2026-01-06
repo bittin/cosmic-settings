@@ -16,6 +16,7 @@ use cosmic_randr_shell::{
     AdaptiveSyncAvailability, AdaptiveSyncState, List, Output, OutputKey, Transform,
 };
 use cosmic_settings_page::{self as page, Section, section};
+use indexmap::Equivalent;
 use slab::Slab;
 use slotmap::{Key, SecondaryMap, SlotMap};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -33,7 +34,7 @@ static DPI_SCALE_LABELS: LazyLock<Vec<String>> =
 #[derive(Clone, Copy, Debug)]
 pub struct ColorDepth(usize);
 
-/// Identifies the content to display in the context drawer
+// /// Identifies the content to display in the context drawer
 // pub enum ContextDrawer {
 //     NightLight,
 // }
@@ -261,7 +262,7 @@ impl page::Page<crate::pages::Message> for Page {
         #[cfg(feature = "wayland")]
         {
             let refreshing_page = self.refreshing_page.clone();
-            let (tx, mut rx) = tachyonix::channel(4);
+            let (tx, rx) = cosmic_randr::channel();
             let (canceller, cancelled) = oneshot::channel::<()>();
             let runtime = tokio::runtime::Handle::current();
 
@@ -286,11 +287,11 @@ impl page::Page<crate::pages::Message> for Page {
             // Forward messages from another thread to prevent the monitoring thread from blocking.
             let (randr_task, randr_handle) =
                 Task::stream(async_fn_stream::fn_stream(|emitter| async move {
-                    while let Ok(message) = rx.recv().await {
-                        if let cosmic_randr::Message::ManagerDone = message {
-                            if !refreshing_page.swap(true, Ordering::SeqCst) {
-                                _ = emitter.emit(on_enter().await).await;
-                            }
+                    while let Some(message) = rx.recv().await {
+                        if let cosmic_randr::Message::ManagerDone = message
+                            && !refreshing_page.swap(true, Ordering::SeqCst)
+                        {
+                            _ = emitter.emit(on_enter().await).await;
                         }
                     }
                 }))
@@ -398,6 +399,7 @@ impl page::Page<crate::pages::Message> for Page {
                 enabled: true,
                 make: None,
                 model: "Test 1".into(),
+                serial_number: "Serial 1".into(),
                 mirroring: None,
                 physical: (1, 1),
                 position: (0, 0),
@@ -415,6 +417,7 @@ impl page::Page<crate::pages::Message> for Page {
                 enabled: true,
                 make: None,
                 model: "Test 1".into(),
+                serial_number: "Serial 2".into(),
                 mirroring: None,
                 physical: (1, 1),
                 position: (1920, 0),
@@ -451,7 +454,7 @@ impl page::Page<crate::pages::Message> for Page {
     /// the Randr enum value which undos the current change. Makde sure the
     /// return value is returned with the `exec_value` return value within a batch
     /// Task.
-    fn dialog(&self) -> Option<Element<pages::Message>> {
+    fn dialog(&self) -> Option<Element<'_, pages::Message>> {
         self.dialog?;
         let element = widget::dialog()
             .title(fl!("dialog", "title"))
@@ -546,7 +549,24 @@ impl Page {
             Message::DisplayToggle(enable) => return self.toggle_display(enable),
 
             Message::Mirroring(mirroring) => match mirroring {
-                Mirroring::Disable => return self.toggle_display(true),
+                Mirroring::Disable => {
+                    for k in self.mirror_map.keys() {
+                        if k.equivalent(&self.active_display) {
+                            return self.toggle_display(true);
+                        }
+
+                        if let Some(v) = self.mirror_map.get(k)
+                            && v.equivalent(&self.active_display) {
+                                if let Some(output) = self.list.outputs.get(k) {
+                                    return self.exec_randr(output, Randr::Toggle(true));
+                                } else {
+                                    return Task::none();
+                                }
+                            }
+                    }
+
+                    return Task::none();
+                }
 
                 Mirroring::Mirror(from_display) => {
                     let Some(output) = self.list.outputs.get(self.active_display) else {
@@ -931,14 +951,13 @@ impl Page {
             return Task::none();
         };
 
-        if let Some(ref resolution) = self.config.resolution {
-            if let Some(rates) = self.cache.modes.get(resolution) {
-                if let Some(&rate) = rates.get(option) {
-                    self.cache.refresh_rate_selected = Some(option);
-                    self.config.refresh_rate = Some(rate);
-                    return self.exec_randr(output, Randr::RefreshRate(rate));
-                }
-            }
+        if let Some(ref resolution) = self.config.resolution
+            && let Some(rates) = self.cache.modes.get(resolution)
+            && let Some(&rate) = rates.get(option)
+        {
+            self.cache.refresh_rate_selected = Some(option);
+            self.config.refresh_rate = Some(rate);
+            return self.exec_randr(output, Randr::RefreshRate(rate));
         }
 
         Task::none()
@@ -1329,7 +1348,7 @@ pub fn display_configuration() -> Section<crate::pages::Message> {
                     .button_alignment(Alignment::Center)
                     .on_activate(Message::Display);
 
-                let mut display_enable = (page
+                let mut display_enable = if page
                     // Don't allow disabling display if it's the only active
                     .list
                     .outputs
@@ -1337,22 +1356,23 @@ pub fn display_configuration() -> Section<crate::pages::Message> {
                     .filter(|display| display.enabled)
                     .count()
                     > 1
-                    || !active_output.enabled)
-                    .then(|| {
-                        list_column()
-                            .add(widget::settings::item(
-                                &descriptions[enable_label],
-                                toggler(active_output.enabled).on_toggle(Message::DisplayToggle),
-                            ))
-                            .add(widget::settings::item(
-                                &descriptions[mirroring_label],
-                                widget::dropdown::multi::dropdown(
-                                    &page.mirror_menu,
-                                    Message::Mirroring,
-                                ),
-                            ))
-                    })
-                    .unwrap_or_else(list_column);
+                    || !active_output.enabled
+                {
+                    list_column()
+                        .add(widget::settings::item(
+                            &descriptions[enable_label],
+                            toggler(active_output.enabled).on_toggle(Message::DisplayToggle),
+                        ))
+                        .add(widget::settings::item(
+                            &descriptions[mirroring_label],
+                            widget::dropdown::multi::dropdown(
+                                &page.mirror_menu,
+                                Message::Mirroring,
+                            ),
+                        ))
+                } else {
+                    list_column()
+                };
 
                 if let Some(items) = display_options {
                     for item in items {

@@ -68,7 +68,7 @@ impl Page {
             }
             Message::Inner(inner) => {
                 if let inner::Message::Surface(a) = inner {
-                    return cosmic::task::message(crate::app::Message::Surface(a));
+                    cosmic::task::message(crate::app::Message::Surface(a))
                 } else {
                     self.inner
                         .update(inner)
@@ -217,5 +217,11 @@ impl page::Page<crate::pages::Message> for Page {
         page::Info::new("dock", "preferences-dock-symbolic")
             .title(fl!("dock"))
             .description(fl!("dock", "desc"))
+    }
+
+    fn on_enter(&mut self) -> Task<crate::pages::Message> {
+        self.inner.update_defaults();
+
+        Task::none()
     }
 }

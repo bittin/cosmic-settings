@@ -24,7 +24,7 @@ pub struct Message(pub inner::Message);
 impl Page {
     pub fn update(&mut self, message: Message) -> Task<crate::app::Message> {
         if let inner::Message::Surface(a) = message.0 {
-            return cosmic::task::message(crate::app::Message::Surface(a));
+            cosmic::task::message(crate::app::Message::Surface(a))
         } else {
             self.inner
                 .update(message.0)
@@ -138,5 +138,11 @@ impl page::Page<crate::pages::Message> for Page {
         page::Info::new("panel", "preferences-panel-symbolic")
             .title(fl!("panel"))
             .description(fl!("panel", "desc"))
+    }
+
+    fn on_enter(&mut self) -> Task<crate::pages::Message> {
+        self.inner.update_defaults();
+
+        Task::none()
     }
 }

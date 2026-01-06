@@ -118,11 +118,7 @@ pub fn color_select_options(
             })
             .chain(wallpaper::DEFAULT_COLORS.iter().map(|color| (color, false)))
             .map(|(color, removable)| {
-                color_button(
-                    color.clone(),
-                    removable,
-                    selected.map_or(false, |selection| selection == color),
-                )
+                color_button(color.clone(), removable, selected == Some(color))
             })
             .collect::<Vec<_>>(),
     )
@@ -134,7 +130,7 @@ pub fn wallpaper_select_options(
     page: &super::Page,
     selected: Option<DefaultKey>,
     show_custom_images: bool,
-) -> Element<Message> {
+) -> Element<'_, Message> {
     let mut vec = Vec::with_capacity(page.selection.selection_handles.len());
 
     if show_custom_images {
@@ -146,7 +142,7 @@ pub fn wallpaper_select_options(
                 handle,
                 *id,
                 true,
-                selected.map_or(false, |selection| id == &selection),
+                selected.is_some_and(|selection| id == &selection),
             ));
         }
     }
@@ -157,18 +153,13 @@ pub fn wallpaper_select_options(
             continue;
         }
 
-        vec.push(wallpaper_button(
-            handle,
-            id,
-            false,
-            selected.map_or(false, |selection| id == selection),
-        ));
+        vec.push(wallpaper_button(handle, id, false, selected == Some(id)));
     }
 
     flex_select_row(vec)
 }
 
-fn flex_select_row(elements: Vec<Element<Message>>) -> Element<Message> {
+fn flex_select_row(elements: Vec<Element<'_, Message>>) -> Element<'_, Message> {
     cosmic::widget::flex_row(elements)
         .column_spacing(COLUMN_SPACING)
         .row_spacing(ROW_SPACING)
@@ -182,7 +173,7 @@ fn wallpaper_button(
     id: DefaultKey,
     removable: bool,
     selected: bool,
-) -> Element<Message> {
+) -> Element<'_, Message> {
     cosmic::widget::button::image(handle.clone())
         .selected(selected)
         .on_press(Message::Select(id))

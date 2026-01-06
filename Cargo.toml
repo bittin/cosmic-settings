@@ -1,5 +1,5 @@
 [workspace]
-members = ["cosmic-settings", "page", "pages/*"]
+members = ["cosmic-settings", "crates/*", "page", "pages/*", "subscriptions/*"]
 default-members = ["cosmic-settings"]
 resolver = "3"
 
@@ -8,10 +8,10 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 cosmic-randr = { git = "https://github.com/pop-os/cosmic-randr" }
-tokio = { version = "1.47.1", features = ["macros"] }
+tokio = { version = "1.48.0", features = ["macros"] }
 
 [workspace.dependencies.libcosmic]
-features = ["dbus-config", "multi-window", "winit", "tokio"]
+features = ["dbus-config", "multi-window", "winit", "tokio", "qr_code"]
 git = "https://github.com/pop-os/libcosmic"
 
 [workspace.dependencies.cosmic-config]
@@ -33,21 +33,19 @@ git = "https://github.com/pop-os/cosmic-panel"
 [workspace.dependencies.cosmic-randr-shell]
 git = "https://github.com/pop-os/cosmic-randr"
 
-[workspace.dependencies.cosmic-settings-subscriptions]
-git = "https://github.com/pop-os/cosmic-settings-subscriptions"
-
 [workspace.dependencies.sctk]
 git = "https://github.com/smithay/client-toolkit/"
 package = "smithay-client-toolkit"
 # rev = "c583de8"
 
 [profile.dev]
-opt-level = "s"
+opt-level = 3
 lto = "off"
 
 [profile.release]
-opt-level = "s"
+opt-level = 3
 lto = "thin"
+panic = "abort"
 
 [profile.release-with-debug]
 inherits = "release"
@@ -59,8 +57,8 @@ debug = true
 # cosmic-text = { git = "https://github.com/pop-os/cosmic-text//", rev = "b017d7c" }
 
 [patch.'https://github.com/pop-os/cosmic-protocols']
-cosmic-protocols = { git = "https://github.com/pop-os/cosmic-protocols//", rev = "6254f50" }
-cosmic-client-toolkit = { git = "https://github.com/pop-os/cosmic-protocols//", rev = "6254f50" }
+cosmic-protocols = { git = "https://github.com/pop-os/cosmic-protocols//", rev = "d0e95be" }
+cosmic-client-toolkit = { git = "https://github.com/pop-os/cosmic-protocols//", rev = "d0e95be" }
 
 # [patch.'https://github.com/pop-os/cosmic-settings-daemon']
 # cosmic-settings-config = { git = "https://github.com/pop-os/cosmic-settings-daemon//", branch = "input_nobuild" }
@@ -75,6 +73,7 @@ cosmic-client-toolkit = { git = "https://github.com/pop-os/cosmic-protocols//", 
 # [patch.'https://github.com/pop-os/dbus-settings-bindings']
 # cosmic-dbus-networkmanager = { path = "../dbus-settings-bindings/networkmanager" }
 # upower_dbus = { path = "../dbus-settings-bindings/upower" }
+# nm-secret-agent-manager = { git = "https://github.com/pop-os/dbus-settings-bindings//", branch = "nm-secret-agent" }
 
 [patch."https://github.com/smithay/client-toolkit.git"]
 sctk = { package = "smithay-client-toolkit", version = "0.20.0" }

@@ -9,8 +9,7 @@ use cosmic::{
     Apply, Element, Task,
     app::{ContextDrawer, context_drawer},
     cosmic_config::{self, ConfigSet},
-    iced::{Alignment, Color, Length},
-    iced_core::Border,
+    iced::{Alignment, Length},
     theme,
     widget::{self, ListColumn, button, container, icon, radio, row, settings},
 };
@@ -51,8 +50,6 @@ static CAPS_LOCK_OPTIONS: &[(&str, &str)] = &[
     ("Super", "caps:super"),
     ("Control", "caps:ctrl_modifier"),
 ];
-
-const STR_ORDER: &str = "`str` is always comparable";
 
 #[derive(Clone, Debug)]
 pub enum Message {
@@ -168,23 +165,19 @@ fn popover_menu_row(
     label: String,
     message: impl Fn(DefaultKey) -> SourceContext + 'static,
 ) -> cosmic::Element<'static, Message> {
+    let spacing = theme::spacing();
     widget::text::body(label)
-        .apply(widget::container)
-        .class(cosmic::theme::Container::custom(|theme| {
-            widget::container::Style {
-                background: None,
-                ..container::Catalog::style(theme, &cosmic::theme::Container::List)
-            }
-        }))
+        .align_y(Alignment::Center)
         .apply(button::custom)
-        .on_press(())
-        .class(theme::Button::Transparent)
+        .padding([spacing.space_xxxs, spacing.space_xs])
+        .width(Length::Fill)
+        .class(theme::Button::MenuItem)
+        .on_press(Message::SourceContext(message(id)))
         .apply(Element::from)
-        .map(move |()| Message::SourceContext(message(id)))
 }
 
 fn popover_menu(id: DefaultKey) -> cosmic::Element<'static, Message> {
-    widget::column::with_children(vec![
+    widget::column::with_children([
         popover_menu_row(
             id,
             fl!("keyboard-sources", "move-up"),
@@ -195,7 +188,10 @@ fn popover_menu(id: DefaultKey) -> cosmic::Element<'static, Message> {
             fl!("keyboard-sources", "move-down"),
             SourceContext::MoveDown,
         ),
-        cosmic::widget::divider::horizontal::default().into(),
+        widget::divider::horizontal::default()
+            .apply(widget::container)
+            .padding(8)
+            .into(),
         popover_menu_row(
             id,
             fl!("keyboard-sources", "settings"),
@@ -208,26 +204,10 @@ fn popover_menu(id: DefaultKey) -> cosmic::Element<'static, Message> {
         ),
         popover_menu_row(id, fl!("keyboard-sources", "remove"), SourceContext::Remove),
     ])
-    .padding([2, 8])
-    .width(Length::Shrink)
-    .height(Length::Shrink)
-    .apply(cosmic::widget::container)
-    .class(cosmic::theme::Container::custom(|theme| {
-        let cosmic = theme.cosmic();
-        let background = &cosmic.background;
-        container::Style {
-            icon_color: Some(background.on.into()),
-            text_color: Some(background.on.into()),
-            background: Some(Color::from(background.base).into()),
-            border: Border {
-                color: background.component.divider.into(),
-                width: 1.0,
-                radius: cosmic.corner_radii.radius_s.into(),
-                ..Border::default()
-            },
-            shadow: Default::default(),
-        }
-    }))
+    .width(Length::Fixed(200.0))
+    .apply(widget::container)
+    .padding(theme::spacing().space_xxs)
+    .class(theme::Container::Dropdown)
     .into()
 }
 
@@ -239,7 +219,8 @@ fn popover_button(id: DefaultKey, expanded: bool) -> cosmic::Element<'static, Me
         .on_press(on_press);
 
     if expanded {
-        cosmic::widget::popover(button)
+        widget::popover(button)
+            .position(widget::popover::Position::Bottom)
             .popup(popover_menu(id))
             .on_close(Message::ExpandInputSourcePopover(None))
             .into()
@@ -252,7 +233,7 @@ fn input_source(
     id: DefaultKey,
     description: &str,
     expanded_source_popover: Option<DefaultKey>,
-) -> cosmic::Element<Message> {
+) -> cosmic::Element<'_, Message> {
     let expanded = expanded_source_popover.is_some_and(|expanded_id| expanded_id == id);
 
     settings::item(description, popover_button(id, expanded)).into()
@@ -361,10 +342,7 @@ impl page::Page<crate::pages::Message> for Page {
                         (_, "custom") => cmp::Ordering::Less,
                         // Compare everything else by description because it looks nicer (e.g. all
                         // English grouped together)
-                        _ => a
-                            .description()
-                            .partial_cmp(b.description())
-                            .expect(STR_ORDER),
+                        _ => a.description().cmp(b.description()),
                     }
                 });
 
@@ -388,7 +366,7 @@ impl page::Page<crate::pages::Message> for Page {
                     }) {
                         let mut variants: Vec<_> = variants.collect();
                         variants.sort_unstable_by(|(_, _, desc_a, _), (_, _, desc_b, _)| {
-                            desc_a.partial_cmp(desc_b).expect(STR_ORDER)
+                            desc_a.cmp(desc_b)
                         });
 
                         for (layout_name, name, description, source) in variants {
@@ -461,22 +439,20 @@ impl Page {
                     SourceContext::MoveDown(id) => {
                         if let Some(pos) =
                             self.active_layouts.iter().position(|&active| active == id)
+                            && pos + 1 < self.active_layouts.len()
                         {
-                            if pos + 1 < self.active_layouts.len() {
-                                self.active_layouts.swap(pos, pos + 1);
-                                self.update_xkb_config();
-                            }
+                            self.active_layouts.swap(pos, pos + 1);
+                            self.update_xkb_config();
                         }
                     }
 
                     SourceContext::MoveUp(id) => {
                         if let Some(pos) =
                             self.active_layouts.iter().position(|&active| active == id)
+                            && pos > 0
                         {
-                            if pos > 0 {
-                                self.active_layouts.swap(pos, pos - 1);
-                                self.update_xkb_config();
-                            }
+                            self.active_layouts.swap(pos, pos - 1);
+                            self.update_xkb_config();
                         }
                     }
 
@@ -610,10 +586,13 @@ impl Page {
     }
 
     fn special_character_key_view(&self, special_key: SpecialKey) -> cosmic::Element<'_, Message> {
-        let options = match special_key {
-            SpecialKey::Compose => COMPOSE_OPTIONS,
-            SpecialKey::AlternateCharacters => ALTERNATE_CHARACTER_OPTIONS,
-            SpecialKey::CapsLock => CAPS_LOCK_OPTIONS,
+        let (options, description) = match special_key {
+            SpecialKey::Compose => (
+                COMPOSE_OPTIONS,
+                Some(fl!("keyboard-special-char", "compose-desc")),
+            ),
+            SpecialKey::AlternateCharacters => (ALTERNATE_CHARACTER_OPTIONS, None),
+            SpecialKey::CapsLock => (CAPS_LOCK_OPTIONS, None),
         };
         let prefix = special_key.prefix();
         let current = self
@@ -623,7 +602,7 @@ impl Page {
             .flat_map(|x| x.split(','))
             .find(|x| x.starts_with(prefix));
 
-        // TODO description, layout default
+        // TODO layout default
 
         let mut list = cosmic::widget::list_column();
 
@@ -638,7 +617,11 @@ impl Page {
             .map(|(desc, id)| special_char_radio_row(desc, Some(id), current))
             .fold(list, ListColumn::add);
 
-        cosmic::widget::container(list).padding(24).into()
+        widget::column::with_capacity(2)
+            .spacing(theme::spacing().space_m)
+            .push_maybe(description.map(widget::text::body))
+            .push(list)
+            .into()
     }
 
     fn numlock_state_view(&self) -> cosmic::Element<'_, Message> {
@@ -666,7 +649,7 @@ impl Page {
             ]));
         }
 
-        cosmic::widget::container(list).padding(24).into()
+        list.into()
     }
 
     fn update_xkb_config(&mut self) {
@@ -714,7 +697,7 @@ fn input_sources() -> Section<crate::pages::Message> {
                 .on_press(Message::ShowInputSourcesContext);
 
             widget::column::with_capacity(2)
-                .spacing(cosmic::theme::spacing().space_xxs)
+                .spacing(theme::spacing().space_xxs)
                 .push(section)
                 .push(
                     widget::container(add_input_source)
@@ -817,7 +800,7 @@ fn keyboard_typing_assist() -> Section<crate::pages::Message> {
 
                     row::with_capacity(3)
                         .align_y(Alignment::Center)
-                        .spacing(cosmic::theme::spacing().space_s)
+                        .spacing(theme::spacing().space_s)
                         .push(widget::text::body(&descriptions[short]))
                         .push(delay_slider)
                         .push(widget::text::body(&descriptions[long]))
@@ -837,7 +820,7 @@ fn keyboard_typing_assist() -> Section<crate::pages::Message> {
 
                     row::with_capacity(3)
                         .align_y(Alignment::Center)
-                        .spacing(cosmic::theme::spacing().space_s)
+                        .spacing(theme::spacing().space_s)
                         .push(widget::text::body(&descriptions[slow]))
                         .push(rate_slider)
                         .push(widget::text::body(&descriptions[fast]))

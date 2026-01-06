@@ -277,7 +277,6 @@ add-applet = Pridať applet
 all = Všetko
 applets = Applety
 center-segment = Stredný segment
-drop-here = Sem presuňte applety
 end-segment = Koncový segment
 large = Veľký
 no-applets-found = Neboli nájdené žiadne applety...
@@ -435,7 +434,6 @@ sound-alerts = Upozornenia
     .sound = Zvuk upozornení
 sound-applications = Aplikácie
     .desc = Hlasitosti a nastavenia aplikácií
-profile = Profil
 
 ## Napájanie
 

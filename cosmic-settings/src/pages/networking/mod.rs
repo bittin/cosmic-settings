@@ -13,10 +13,13 @@ use cosmic_dbus_networkmanager::{
     interface::enums::{DeviceState, DeviceType},
     nm::NetworkManager,
 };
+use cosmic_settings_network_manager_subscription as network_manager;
 use cosmic_settings_page::{self as page, Section, section};
-use cosmic_settings_subscriptions::network_manager;
 use futures::StreamExt;
+use secure_string::SecureString;
 use slotmap::SlotMap;
+
+pub type SecretSender = Arc<tokio::sync::Mutex<Option<tokio::sync::oneshot::Sender<SecureString>>>>;
 
 static NM_CONNECTION_EDITOR: &str = "nm-connection-editor";
 
@@ -227,7 +230,7 @@ impl page::Page<crate::pages::Message> for Page {
                     .context("failed to create system dbus connection")
                     .map_or_else(
                         |why| Message::Error(why.to_string()),
-                        |conn| Message::NetworkManagerConnect(conn),
+                        Message::NetworkManagerConnect,
                     )
                     .apply(crate::pages::Message::Networking)
             });

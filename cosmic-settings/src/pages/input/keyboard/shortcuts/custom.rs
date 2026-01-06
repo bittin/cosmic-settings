@@ -248,16 +248,47 @@ impl Page {
                     let old =
                         std::mem::replace(&mut self.add_shortcut.binding.modifiers, cfg_modifiers);
 
-                    if self.add_shortcut.binding.keycode.is_none()
-                        && modifiers.is_empty()
-                        && (old.alt || old.ctrl || old.shift || old.logo)
-                    {
-                        self.add_shortcut = Default::default();
-                        _ = self.model.on_enter();
+                    if self.add_shortcut.binding.keycode.is_none() && modifiers.is_empty() {
+                        if old.logo {
+                            // XX for now avoid applying the keycode
+                            let binding = Binding {
+                                modifiers: self.add_shortcut.binding.modifiers.clone(),
+                                key: self.add_shortcut.binding.key,
+                                keycode: None,
+                                description: None,
+                            };
+                            let Some(k) = self
+                                .add_shortcut
+                                .keys
+                                .get_mut(self.add_shortcut.editing.unwrap())
+                            else {
+                                return iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(false).discard();
+                            };
+                            k.0 = binding.to_string();
 
-                        return Task::batch(vec![
-                            iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(false).discard()
-                        ]);
+                            if self.add_shortcut.name.trim().is_empty()
+                                || self.add_shortcut.task.trim().is_empty()
+                            {
+                                return Task::batch(vec![
+                                    widget::text_input::focus(widget::Id::unique()),
+                                    iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(false).discard(),
+                                ]);
+                            }
+                            self.add_shortcut(binding);
+                            _ = self.model.on_enter();
+
+                            return Task::batch(vec![
+                                widget::text_input::focus(widget::Id::unique()),
+                                iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(false).discard(),
+                            ]);
+                        } else if old.alt || old.ctrl || old.shift {
+                            self.add_shortcut = Default::default();
+                            _ = self.model.on_enter();
+
+                            return Task::batch(vec![
+                                iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(false).discard()
+                            ]);
+                        }
                     }
                     if let Some(k) = self
                         .add_shortcut
@@ -280,6 +311,9 @@ impl Page {
                         .is_some_and(|k| k == keycode)
                     && self.add_shortcut.binding.modifiers
                         != cosmic_settings_config::shortcuts::Modifiers::new()
+                    || self.add_shortcut.binding.key.is_some_and(|key| {
+                        key.is_misc_function_key() || matches!(key.raw(), 0x10080001..=0x1008FFFF)
+                    })
                 {
                     // XX for now avoid applying the keycode
                     let binding = Binding {
@@ -533,7 +567,7 @@ impl page::Page<crate::pages::Message> for Page {
     }
 
     fn on_leave(&mut self) -> Task<crate::pages::Message> {
-        _ = self.model.on_clear();
+        self.model.on_clear();
         iced_winit::platform_specific::commands::keyboard_shortcuts_inhibit::inhibit_shortcuts(
             false,
         )
@@ -564,9 +598,7 @@ impl page::Page<crate::pages::Message> for Page {
                         if matches!(
                             key,
                             Key::Named(Named::Super | Named::Alt | Named::Control | Named::Shift)
-                        ) {
-                            return None;
-                        } else if matches!((&key, modifiers), (Key::Named(Named::Tab), modifiers) if modifiers.is_empty() || modifiers == Modifiers::SHIFT)
+                        ) || matches!((&key, modifiers), (Key::Named(Named::Tab), modifiers) if modifiers.is_empty() || modifiers == Modifiers::SHIFT)
                         {
                             return None;
                         }

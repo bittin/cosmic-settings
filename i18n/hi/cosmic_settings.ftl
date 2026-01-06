@@ -29,7 +29,7 @@ no-networks = कोई नेटवर्क नहीं मिला।
 no-vpn = कोई वी.पी.एन कनेक्शन नहीं है।
 password = पासवर्ड
 remove = हटा दें
-settings = सेटिंग्स
+settings = सेटिंग
 username = उपयोगकर्ता नाम
 visible-networks = दृश्य नेटवर्क
 auth-dialog = प्रमाणीकरण आवश्यक है
@@ -139,7 +139,11 @@ fill = भरें
 fit-to-screen = स्क्रीन पर समायोजन
 open-new-folder = नया फ़ोल्डर खोलें
 recent-folders = हाल के फ़ोल्डर
-x-minutes = { $number } मिनट
+x-minutes =
+    { $number } { $number ->
+        [one] मिनट
+       *[other] मिनट
+    }
 x-hours =
     { $number ->
         [1] 1 घंटा
@@ -220,7 +224,6 @@ add-applet = ऐपलेट जोड़ें
 all = सभी
 applets = ऐपलेट्स
 center-segment = केंद्र खंड
-drop-here = ऐपलेट्स को यहाँ छोड़ें
 end-segment = अंतिम खंड
 large = बड़ा
 no-applets-found = कोई ऐपलेट्स नहीं मिले...
@@ -317,7 +320,8 @@ display = प्रदर्शन
     .options = प्रदर्शन विकल्प
     .refresh-rate = ताज़ा दर
     .resolution = संकल्प
-    .scale = आकार
+    .scale = स्तर
+    .additional-scale-options = अतिरिक्त स्तर के विकल्प
 mirroring = परावर्तन
     .id = परावर्तित { $id }
     .dont = परावर्तित न करें
@@ -348,10 +352,14 @@ dialog = संवाद
     .change-prompt = सेटिंग में परिवर्तन { $time } सेकंड में स्वचालित रूप से वापस आ जाएगा।
     .revert-settings = सेटिंग्स वापस करें
 legacy-app-scaling = X11 विंडो सिस्टम एप्लिकेशन स्केलिंग
-    .scaled-by-system = सभी X11 एप्लिकेशनों को स्केल करें
-    .system-description = X11 एप्लिकेशन HiDPI स्क्रीन पर धुंधले दिखते हैं।
-    .scaled-natively = स्थानीय संकल्प पर X11 एप्लिकेशनों को स्केल करें
-    .native-description = HiDPI प्रदर्शन के उपयोग के दौरान स्केलिंग का समर्थन न करने वाले X11 एप्लिकेशन छोटे हो जाते हैं। खेलों के लिए पूर्ण मॉनिटर संकल्प का उपयोग करने के लिए सक्रिय करें।
+    .scaled-gaming = गेमिंग और फ़ुल-स्क्रीन ऐप्स के लिए अनुकूलित करें
+    .gaming-description = Wayland ऐप्स की तुलना में X11 एप्लिकेशन थोड़े बड़े/छोटे दिखाई दे सकते हैं।
+    .scaled-applications = एप्लिकेशन के लिए अनुकूलित करें
+    .applications-description = हो सकता है कि गेम और पूर्ण-स्क्रीन X11 ऐप्स आपके डिस्प्ले रिज़ॉल्यूशन से मेल न खाएं।
+    .scaled-compatibility = अधिकतम अनुकूलता मोड
+    .compatibility-description = X11 एप्लिकेशन HiDPI स्क्रीन पर धुंधले दिखाई दे सकते हैं।
+    .preferred-display = गेम और पूर्ण स्क्रीन X11 एप्लिकेशन के लिए अधिमानित डिस्प्ले
+    .no-display = कोई नही
 
 ## Sound
 
@@ -363,6 +371,8 @@ sound-output = आउटपुट
     .level = आउटपुट स्तर
     .config = कॉन्फ़िगरेशन
     .balance = संतुलन
+    .left = बाएं
+    .right = दाएं
 sound-input = इनपुट
     .volume = इनपुट ध्वनि
     .device = इनपुट उपकरण
@@ -372,7 +382,6 @@ sound-alerts = अलार्म
     .sound = अलार्म ध्वनि
 sound-applications = अनुप्रयोग
     .desc = अनुप्रयोग ध्वनियाँ और सेटिंग्स
-profile = प्रोफ़ाइल
 
 ## Power
 
@@ -460,7 +469,6 @@ show-extended-input-sources = विस्तारित इनपुट स्
 
 keyboard-shortcuts = कीबोर्ड शॉर्टकट
     .desc = शॉर्टकट देखें और कस्टमाइज़ करें
-add-keybinding = कीबाइंडिंग जोड़ें
 cancel = रद्द करें
 command = कमांड
 custom = कस्टम
@@ -675,3 +683,120 @@ password-confirm = पासवर्ड की पुष्टि करें
 identity = पहचान
 activate = सक्रिय करें
 enable = सक्षम करें
+default = डिफ़ॉल्ट
+accessibility = उपलब्धता
+    .vision = दृष्टि
+    .on = चालू
+    .off = बंद
+    .unavailable = अनुपलब्ध
+    .screen-reader = स्क्रीन रीडर
+    .high-contrast = उच्च कंट्रास्ट मोड
+    .invert-colors = रंगों को औंधा करें
+    .color-filters = रंग फिल्टर
+hearing = सुनने की शक्ति
+    .mono = स्टीरियो ऑडियो को मोनो के रूप में चलाएँ
+magnifier = आवर्धक
+    .controls =
+        या इन शॉर्टकट का उपयोग करें: { $zoom_in ->
+            [zero] { "" }
+           *[other]
+                { "" }
+                { $zoom_in } ,ज़ूम इन करने के लिए
+        }{ $zoom_out ->
+            [zero] { "" }
+           *[other]
+                { "" }
+                { $zoom_out } ज़ूम आउट करने के लिए,
+        }
+        Super + स्क्रॉल अपने माउस से करें
+    .scroll_controls = Super + स्क्राॅल से माउस या टचपैड सक्षम करें
+    .show_overlay = आवर्धक ओवरले दिखाएं
+    .increment = ज़ूम वृद्धि
+    .signin = साइन इन करने पर आवर्धक चालू करें
+    .applet = पैनल पर एप्लेट में आवर्धक को चालू/बंद करें
+    .movement = ज़ूम किया गया दृश्य चलेगा
+    .continuous = पॉइंटर के साथ लगातार
+    .onedge = जब पॉइंटर किनारे पर पहुँचता है
+    .centered = पॉइंटर को केंद्रित रखने के लिए
+color-filter = रंग फिल्टर का प्रकार
+    .unknown = अज्ञात फ़िल्टर सक्रिय
+    .greyscale = ग्रेस्केल
+    .deuteranopia = हरा/लाल(हरा कमजोर, ड्यूटेरानोपिया)
+    .protanopia = लाल/हरा (लाल कमजोर, प्रोटानोपिया)
+    .tritanopia = नीला/पीला (नीला कमजोर, ट्रिटानोपिया)
+never = कभी नहीं
+edge-gravity = फ्लोटिंग विंडो आस-पास के किनारों की ओर आकर्षित होती हैं
+vrr = परिवर्तनीय रिफ्रेश दर
+    .enabled = सक्रिय
+    .force = सदैव
+    .auto = स्वचालित
+    .disabled = अक्षम
+amplification = एंप्लीफ़िकेशन
+    .desc = 150% तक ध्वनि बढ़ाने की अनुमति देता है
+power-saving = पाॅवर बचत के विकल्प
+    .turn-off-screen-after = इतने समय के बाद स्क्रीन बंद कर दें
+    .auto-suspend = स्वचालित निलंबन
+    .auto-suspend-ac = चार्जिंग करने पर स्वचालित निलंबन
+    .auto-suspend-battery = बैटरी पाॅवर पर स्वचालित निलंबन
+keyboard-numlock-boot = न्यूमेरिकल लॉक
+    .boot-state = बूट पर अवस्था
+    .last-boot = पिछला बूट
+    .on = चालू
+    .off = बंद
+    .set = न्यूमेरिकल लॉक बूट अवस्था सेट करें
+add-another-keybinding = एक और कीबाइंडिंग जोड़ें
+input-source-switch = कीबोर्ड भाषा इनपुट स्रोत स्विच करें
+zoom-in = ज़ूम इन करें
+zoom-out = ज़ूम आउट करें
+formatting = प्रारूप
+    .dates = तिथि
+    .time = समय
+    .date-and-time = तिथि और समय
+    .numbers = संख्या
+    .measurement = माप
+    .paper = पेपर
+preferred-languages = अधिमानित भाषाएँ
+    .desc = भाषाओं का क्रम यह निर्धारित करता है कि उपयोगकर्ता इंटरफ़ेस के लिए कौन सी भाषा का उपयोग किया जाएगा। परिवर्तन अगले लॉगिन पर प्रभावी होते हैं।
+add-language = भाषा जोड़ें
+    .context = भाषा जोड़ें
+install-additional-languages = अतिरिक्त भाषाएँ इंस्टाल करें
+region = क्षेत्र
+applications = ऐप्लिकेशन
+default-apps = डिफ़ाॅल्ट ऐप्लिकेशन
+    .desc = डिफ़ॉल्ट वेब ब्राउज़र, मेल क्लाइंट, फ़ाइल ब्राउज़र और अन्य ऐप्लिकेशन।
+    .web-browser = वेब ब्राउज़र
+    .file-manager = फ़ाइल मैनेजर
+    .mail-client = मेल क्लाइंट
+    .music = संगीत
+    .video = वीडियो
+    .photos = फोटो
+    .calendar = कैलेंडर
+    .terminal = टर्मिनल
+    .other-associations = अन्य संघ
+    .text-editor = टेक्स्ट एडिटर
+startup-apps = स्टार्टप ऐप्लिकेशन
+    .desc = लॉगिन पर चलने वाले ऐप्लिकेशनों को कॉन्फ़िगर करें।
+    .add = ऐप जोड़ें
+    .user = लॉग इन करने पर लॉन्च किए गए एप्लिकेशन
+    .none = कोई स्टार्टप ऐप्लिकेशन नही हैं
+    .remove-dialog-title = { $name } हटाएँ?
+    .remove-dialog-description = क्या आप इस स्टार्टअप एप्लिकेशन को हटाने को लेकर निश्चित हैं?
+    .search-for-application = ऐप्लिकेशन ढूँढ़ें
+legacy-applications = X11 ऐप्लिकेशन अनुकूलता
+    .desc = X11 विंडो सिस्टम ऐप्लिकेशन स्केलिंग और वैश्विक शॉर्टकट।
+legacy-app-global-shortcuts = X11 ऐप्लिकेशन में वैश्विक शॉर्टकट
+    .desc = ग्लोबल शॉर्टकट, पुश-टू-टॉक या पुश-टू-म्यूट जैसी सुविधाओं के लिए, अन्य एप्लिकेशन द्वारा एप्लिकेशन में निष्पादित कीस्ट्रोक्स और माउस बटन ईवेंट्स को पहचानने की अनुमति देता है। डिफ़ॉल्ट रूप से, X11 एप्लिकेशन में यह अक्षम होता है ताकि यह सुनिश्चित किया जा सके कि अन्य एप्लिकेशन संवेदनशील जानकारी वाले कीबोर्ड और माउस ईवेंट्स का निरीक्षण न कर सकें।
+    .none = कोई कुंजी नहीं
+    .modifiers = संशोधक (Super, Shift, Control, Alt)
+    .combination = सभी कुंजी जब तक संशोधक Super, Control या Alt दबाए जा रहे हैं
+    .all = सभी कुंजी
+    .mouse = X11 ऐप्लिकेशन में माउस बटन इवेंट
+administrator = प्रशासक
+    .desc = प्रशासक सभी उपयोगकर्ताओं के लिए सेटिंग्स बदल सकते हैं, अन्य उपयोगकर्ताओं को जोड़ और हटा सकते हैं।
+add-user = उपयोगकर्ता जोड़ें
+change-password = पासवर्ड बदलें
+remove-user = उपयोगकर्ता हटाएं
+full-name = पूरा नाम
+invalid-username = अमान्य उपयोगकर्ता नाम।
+password-mismatch = पासवर्ड और पुष्टिकरण मेल खाना चाहिए।
+save = सहेजें

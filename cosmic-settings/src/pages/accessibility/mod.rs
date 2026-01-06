@@ -8,15 +8,15 @@ use cosmic::{
 };
 pub use cosmic_comp_config::ZoomMovement;
 use cosmic_config::CosmicConfigEntry;
+use cosmic_settings_a11y_manager_subscription as cosmic_a11y_manager;
+use cosmic_settings_accessibility_subscription::{
+    DBusRequest, DBusUpdate, subscription as a11y_subscription,
+};
 use cosmic_settings_daemon_config::CosmicSettingsDaemonConfig;
 use cosmic_settings_page::{
     self as page, Insert,
     section::{self, Section},
 };
-use cosmic_settings_subscriptions::accessibility::{
-    DBusRequest, DBusUpdate, subscription as a11y_subscription,
-};
-use cosmic_settings_subscriptions::cosmic_a11y_manager;
 use num_traits::FromPrimitive;
 use slotmap::SlotMap;
 
@@ -231,7 +231,7 @@ pub fn vision() -> section::Section<crate::pages::Message> {
                         text::body(status_text).wrapping(Wrapping::Word),
                         page.wayland_available
                             .is_some()
-                            .then_some(crate::pages::Message::Page(magnifier_entity).into()),
+                            .then_some(crate::pages::Message::Page(magnifier_entity)),
                     )
                 })
                 .add(
@@ -270,7 +270,7 @@ pub fn vision() -> section::Section<crate::pages::Message> {
                         Some(page.screen_filter_selection as usize),
                         move |idx| {
                             let filter = ColorFilter::from_usize(idx).unwrap_or_default();
-                            Message::SetScreenFilterSelection(filter).into()
+                            Message::SetScreenFilterSelection(filter)
                         },
                         cosmic::iced::window::Id::RESERVED,
                         Message::Surface,

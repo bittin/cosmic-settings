@@ -8,6 +8,7 @@ use cosmic::{
     widget::{self, settings, toggler},
 };
 
+use cosmic_comp_config::CosmicCompConfig;
 use cosmic_config::{ConfigGet, ConfigSet};
 use cosmic_settings_config::{Action, Binding, Shortcuts, shortcuts};
 use cosmic_settings_page::Section;
@@ -19,6 +20,7 @@ use tracing::error;
 #[derive(Clone, Debug)]
 pub enum Message {
     SuperKey(usize),
+    CompConfigUpdate(Box<CosmicCompConfig>),
     SetFocusFollowsCursor(bool),
     SaveFocusFollowsCursorDelay(bool),
     SetFocusFollowsCursorDelay(String),
@@ -182,6 +184,11 @@ impl Page {
                     error!(?err, "Failed to set config 'active_hint'");
                 }
             }
+            Message::CompConfigUpdate(comp_config) => {
+                if comp_config.active_hint != self.show_active_hint {
+                    self.show_active_hint = comp_config.active_hint;
+                }
+            }
             Message::SetEdgeSnapThreshold(value) => {
                 self.edge_snap_threshold = value;
                 if let Err(err) = self.comp_config.set("edge_snap_threshold", value) {
@@ -337,11 +344,9 @@ pub fn focus_navigation() -> Section<crate::pages::Message> {
 
 fn super_key_active_config() -> Option<usize> {
     let super_binding = Binding::new(shortcuts::Modifiers::new().logo(), None);
-
     let config = shortcuts::context().ok()?;
-    let shortcuts = shortcuts::shortcuts(&config);
 
-    let new_id = shortcuts
+    shortcuts::shortcuts(&config)
         .iter()
         .find(|(binding, _action)| binding == &&super_binding)
         .and_then(|(_, action)| match action {
@@ -349,9 +354,7 @@ fn super_key_active_config() -> Option<usize> {
             Action::System(shortcuts::action::System::WorkspaceOverview) => Some(1),
             Action::System(shortcuts::action::System::AppLibrary) => Some(2),
             _ => None,
-        });
-
-    new_id
+        })
 }
 
 fn super_key_set(action: Option<shortcuts::action::System>) {

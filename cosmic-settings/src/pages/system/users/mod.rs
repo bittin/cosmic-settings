@@ -11,6 +11,7 @@ use cosmic::{
     widget::{self, Space, column, icon, row, settings, text},
 };
 use cosmic_settings_page::{self as page, Section, section};
+use image::GenericImageView;
 use pwhash::{bcrypt, md5_crypt, sha256_crypt, sha512_crypt};
 use regex::Regex;
 use slab::Slab;
@@ -20,7 +21,7 @@ use std::{
     fs::File,
     future::Future,
     io::{BufRead, BufReader},
-    path::PathBuf,
+    path::{Path, PathBuf},
     sync::Arc,
 };
 use url::Url;
@@ -28,6 +29,14 @@ use zbus_polkit::policykit1::CheckAuthorizationFlags;
 
 const DEFAULT_ICON_FILE: &str = "/usr/share/pixmaps/faces/pop-robot.png";
 const USERS_ADMIN_POLKIT_POLICY_ID: &str = "com.system76.CosmicSettings.Users.Admin";
+
+// AccountsService has a hard limit of 1MB for icon files
+// https://gitlab.freedesktop.org/accountsservice/accountsservice/-/blob/main/src/user.c#L3131
+const MAX_ICON_SIZE_BYTES: u64 = 1_048_576;
+// Use a smaller threshold to ensure compressed images stay under the limit
+const ICON_SIZE_THRESHOLD: u64 = 900_000; // 900KB
+// Target dimensions for resized profile icons
+const TARGET_ICON_SIZE: u32 = 512;
 
 #[derive(Clone, Debug, Default)]
 pub struct User {
@@ -124,6 +133,58 @@ impl From<Message> for crate::pages::Message {
     }
 }
 
+fn prepare_icon_file(path: &Path) -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let metadata = std::fs::metadata(path)?;
+    let file_size = metadata.len();
+
+    tracing::debug!("Icon file size: {} bytes", file_size);
+
+    if file_size <= ICON_SIZE_THRESHOLD {
+        tracing::debug!("File size is acceptable, using original file");
+        return Ok(path.to_path_buf());
+    }
+
+    tracing::info!(
+        "Icon file is {} bytes, resizing to fit under 1MB limit",
+        file_size
+    );
+
+    let img = image::open(path)?;
+    let (width, height) = img.dimensions();
+
+    tracing::debug!("Original image dimensions: {}x{}", width, height);
+
+    let (new_width, new_height) = if width > height {
+        let ratio = TARGET_ICON_SIZE as f32 / width as f32;
+        (TARGET_ICON_SIZE, (height as f32 * ratio) as u32)
+    } else {
+        let ratio = TARGET_ICON_SIZE as f32 / height as f32;
+        ((width as f32 * ratio) as u32, TARGET_ICON_SIZE)
+    };
+
+    tracing::debug!("Resizing to {}x{}", new_width, new_height);
+
+    let resized = img.resize(new_width, new_height, image::imageops::FilterType::Lanczos3);
+
+    // Create a temporary file for the resized icon
+    let temp_dir = std::env::temp_dir();
+    let temp_filename = format!("cosmic-settings-icon-{}.png", std::process::id());
+    let temp_path = temp_dir.join(temp_filename);
+
+    tracing::debug!("Saving resized icon to: {:?}", temp_path);
+
+    resized.save(&temp_path)?;
+
+    let new_size = std::fs::metadata(&temp_path)?.len();
+    tracing::info!("Resized icon file size: {} bytes", new_size);
+
+    if new_size > MAX_ICON_SIZE_BYTES {
+        tracing::warn!("Resized file is still too large, but attempting anyway");
+    }
+
+    Ok(temp_path)
+}
+
 impl page::Page<crate::pages::Message> for Page {
     fn set_id(&mut self, entity: page::Entity) {
         self.entity = entity;
@@ -142,7 +203,7 @@ impl page::Page<crate::pages::Message> for Page {
             .description(fl!("users", "desc"))
     }
 
-    fn dialog(&self) -> Option<Element<pages::Message>> {
+    fn dialog(&self) -> Option<Element<'_, pages::Message>> {
         let dialog = self.dialog.as_ref()?;
 
         let dialog_element = match dialog {
@@ -216,8 +277,8 @@ impl page::Page<crate::pages::Message> for Page {
                     validation_msg = fl!("invalid-username");
                     None
                 } else if user.password != user.password_confirm
-                    && user.password != ""
-                    && user.password_confirm != ""
+                    && !user.password.is_empty()
+                    && !user.password_confirm.is_empty()
                 {
                     validation_msg = fl!("password-mismatch");
                     None
@@ -309,8 +370,8 @@ impl page::Page<crate::pages::Message> for Page {
                 // validation
                 let mut validation_msg = String::new();
                 let complete_maybe = if user.password != user.password_confirm
-                    && user.password != ""
-                    && user.password_confirm != ""
+                    && !user.password.is_empty()
+                    && !user.password_confirm.is_empty()
                 {
                     validation_msg = fl!("password-mismatch");
                     None
@@ -393,9 +454,7 @@ impl Page {
                 is_admin: match user_proxy.account_type().await {
                     Ok(1) => true,
                     Ok(_) => false,
-                    Err(_) => {
-                        admin_group.map_or(false, |group| group.users.contains(&user.username))
-                    }
+                    Err(_) => admin_group.is_some_and(|group| group.users.contains(&user.username)),
                 },
                 username: String::from(user.username),
                 full_name: String::from(user.full_name),
@@ -468,8 +527,17 @@ impl Page {
                         return Message::None;
                     };
 
+                    // Prepare the icon file, resizing if necessary to fit within accountsservice's 1MB limit
+                    let icon_path = match prepare_icon_file(&path) {
+                        Ok(p) => p,
+                        Err(why) => {
+                            tracing::error!(?why, "failed to prepare icon file");
+                            return Message::None;
+                        }
+                    };
+
                     let result = request_permission_on_denial(&conn, || {
-                        user.set_icon_file(path.to_str().unwrap())
+                        user.set_icon_file(icon_path.to_str().unwrap())
                     })
                     .await;
 
@@ -578,16 +646,12 @@ impl Page {
                         return;
                     };
 
-                    match request_permission_on_denial(&conn, || {
+                    if let Err(why) = request_permission_on_denial(&conn, || {
                         user.set_password(&password_hashed, "")
                     })
                     .await
                     {
-                        Err(why) => {
-                            tracing::error!(?why, "failed to set password");
-                        }
-
-                        Ok(_) => (),
+                        tracing::error!(?why, "failed to set password");
                     }
                 })
                 .discard();
@@ -757,7 +821,7 @@ fn user_list() -> Section<crate::pages::Message> {
                     .on_submit(move |_| Message::ApplyEdit(idx, EditorField::FullName))
                     .on_unfocus(Message::ApplyEdit(idx, EditorField::FullName));
 
-                    let fullname_text = text::body(if user.full_name != "" {
+                    let fullname_text = text::body(if !user.full_name.is_empty() {
                         &user.full_name
                     } else {
                         &user.username
@@ -945,14 +1009,7 @@ where
 }
 
 fn permission_was_denied(result: &zbus::Error) -> bool {
-    match result {
-        zbus::Error::MethodError(name, _, _)
-            if name.as_str() == "org.freedesktop.Accounts.Error.PermissionDenied" =>
-        {
-            true
-        }
-        _ => false,
-    }
+    matches!(result, zbus::Error::MethodError(name, _, _) if name.as_str() == "org.freedesktop.Accounts.Error.PermissionDenied")
 }
 
 // TODO: Should we allow deprecated methods?
@@ -977,15 +1034,13 @@ fn get_encrypt_method() -> String {
     };
     let reader = BufReader::new(login_defs);
 
-    for line in reader.lines() {
-        if let Ok(line) = line {
-            if !line.trim().is_empty() {
-                if let Some(index) = line.find(|c: char| c.is_whitespace()) {
-                    let key = line[0..index].trim();
-                    if key == "ENCRYPT_METHOD" {
-                        value = line[(index + 1)..].trim().to_string();
-                    }
-                }
+    for line in reader.lines().map_while(Result::ok) {
+        if !line.trim().is_empty()
+            && let Some(index) = line.find(|c: char| c.is_whitespace())
+        {
+            let key = line[0..index].trim();
+            if key == "ENCRYPT_METHOD" {
+                value = line[(index + 1)..].trim().to_string();
             }
         }
     }
