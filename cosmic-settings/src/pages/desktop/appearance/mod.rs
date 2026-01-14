@@ -40,6 +40,7 @@ pub enum ContextView {
     ApplicationBackground,
     ContainerBackground,
     ControlComponent,
+    ShadowAndCorners,
     CustomAccent,
     IconsAndToolkit,
     InterfaceText,
@@ -124,6 +125,7 @@ pub enum Message {
 
     DrawerOpen(ContextView),
     DrawerColor(ColorPickerUpdate),
+    DrawerCorners(drawer::CornerMessage),
     DrawerFont(drawer::FontMessage),
     DrawerIcon(drawer::IconMessage),
 
@@ -259,6 +261,12 @@ impl Page {
             Message::DrawerIcon(message) => {
                 if let Some(context_view) = self.context_view.as_ref() {
                     tasks.push(self.drawer.update_icon(message, context_view));
+                }
+            }
+
+            Message::DrawerCorners(message) => {
+                if let Some(context_view) = self.context_view.as_ref() {
+                    tasks.push(self.drawer.update_shadow_and_corners(message, context_view));
                 }
             }
 
@@ -598,17 +606,18 @@ impl Page {
         });
 
         if let Some(dock_config_helper) = dock_config_helper.as_ref()
-            && let Some(dock_config) = dock_config.as_mut() {
-                let padding = match roundness {
-                    Roundness::Round => 4,
-                    Roundness::SlightlyRound => 4,
-                    Roundness::Square => 0,
-                };
+            && let Some(dock_config) = dock_config.as_mut()
+        {
+            let padding = match roundness {
+                Roundness::Round => 4,
+                Roundness::SlightlyRound => 4,
+                Roundness::Square => 0,
+            };
 
-                if let Err(why) = dock_config.set_padding(dock_config_helper, padding) {
-                    tracing::error!(?why, "Error updating dock padding");
-                }
+            if let Err(why) = dock_config.set_padding(dock_config_helper, padding) {
+                tracing::error!(?why, "Error updating dock padding");
             }
+        }
     }
 
     // TODO: cache panel and dock configs so that they needn't be re-read
@@ -790,6 +799,7 @@ pub fn window_management() -> Section<crate::pages::Message> {
                 .add(settings::item::builder(&descriptions[active_hint]).control(
                     widget::spin_button(
                         page.theme_manager.builder().active_hint.to_string(),
+                        "active hint",
                         page.theme_manager.builder().active_hint,
                         1,
                         0,
@@ -800,6 +810,7 @@ pub fn window_management() -> Section<crate::pages::Message> {
                 .add(
                     settings::item::builder(&descriptions[gaps]).control(widget::spin_button(
                         page.theme_manager.builder().gaps.1.to_string(),
+                        "gaps",
                         page.theme_manager.builder().gaps.1,
                         1,
                         page.theme_manager.builder().active_hint,
@@ -817,6 +828,7 @@ pub fn experimental() -> Section<crate::pages::Message> {
         interface_font_txt = fl!("interface-font");
         monospace_font_txt = fl!("monospace-font");
         icons_and_toolkit_txt = fl!("icons-and-toolkit");
+        shadow_and_corners_txt = fl!("shadow-and-corners");
     });
 
     Section::default()
@@ -842,11 +854,17 @@ pub fn experimental() -> Section<crate::pages::Message> {
                 Message::DrawerOpen(ContextView::IconsAndToolkit),
             );
 
+            let shadow_and_corners = crate::widget::go_next_item(
+                &descriptions[shadow_and_corners_txt],
+                Message::DrawerOpen(ContextView::ShadowAndCorners),
+            );
+
             settings::section()
                 .title(&*section.title)
                 .add(system_font)
                 .add(mono_font)
                 .add(icons_and_toolkit)
+                .add(shadow_and_corners)
                 .apply(Element::from)
                 .map(crate::pages::Message::Appearance)
         })
